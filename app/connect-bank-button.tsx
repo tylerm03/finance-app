@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useCallback } from 'react'
-import { usePlaidLink } from 'react-plaid-link'
+import { usePlaidLink, type PlaidLinkOnSuccess } from 'react-plaid-link'
 import { useRouter } from 'next/navigation'
 
 export default function ConnectBankButton() {
@@ -22,8 +22,8 @@ export default function ConnectBankButton() {
     setLinkToken(data.link_token)
   }
 
-  const onSuccess = useCallback(
-    async (public_token: string) => {
+  const onSuccess: PlaidLinkOnSuccess = useCallback(
+    async (public_token) => {
       const res = await fetch('/api/plaid/exchange', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
