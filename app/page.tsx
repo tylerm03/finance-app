@@ -1,4 +1,5 @@
 import { createClient } from '@/lib/supabase/server'
+import ConnectBankButton from './connect-bank-button'
 
 export default async function Home() {
   const supabase = await createClient()
@@ -11,6 +12,7 @@ export default async function Home() {
   return (
     <div className="min-h-screen bg-gray-950 p-6 text-gray-100">
       <h1 className="mb-6 text-xl font-medium">Recent Transactions</h1>
+      <div className="mb-6"><ConnectBankButton /></div>
 
       {error && (
         <p className="rounded border border-red-800 bg-red-950 p-3 text-red-400">
