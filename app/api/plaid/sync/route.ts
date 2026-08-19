@@ -111,6 +111,7 @@ export async function POST() {
           location: t.location || null,
           counterparties: t.counterparties || null,
           logo_url: t.logo_url,
+          website: t.website,
           source: 'plaid',
         }
       })

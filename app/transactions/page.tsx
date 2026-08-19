@@ -17,7 +17,7 @@ export default async function TransactionsPage({
 
   let query = supabase
     .from('transactions')
-    .select('*')
+    .select('*, accounts(name)')
     .order('txn_date', { ascending: false })
 
   if (uncategorizedOnly) {
@@ -70,14 +70,16 @@ export default async function TransactionsPage({
             <thead className="bg-gray-900 text-gray-400">
               <tr>
                 <th className="p-3 text-left">Date</th>
+                <th className="p-3 text-left">Account</th>
                 <th className="p-3 text-left">Merchant</th>
                 <th className="p-3 text-left">Category</th>
+                <th className="p-3 text-left">Source</th>
                 <th className="p-3 text-right">Amount</th>
               </tr>
             </thead>
             <tbody>
-              {transactions.map((t) => (
-                <TransactionRow key={t.id} t={t} />
+              {transactions.map((t: any) => (
+                <TransactionRow key={t.id} t={t} accountName={t.accounts?.name} />
               ))}
             </tbody>
           </table>
