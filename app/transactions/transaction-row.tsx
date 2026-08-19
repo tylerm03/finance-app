@@ -37,12 +37,20 @@ export default function TransactionRow({
   const hasDetail =
     plaidCategory?.detailed || t.payment_channel || location?.city || t.website || t.merchant_entity_id
 
+  const rowClassName = hasDetail
+    ? 'border-t border-gray-800 cursor-pointer hover:bg-gray-900/50'
+    : 'border-t border-gray-800'
+
+  const badgeClassName =
+    'rounded-full px-2 py-0.5 text-xs ' +
+    (sourceBadgeStyles[t.category_source] || 'bg-gray-700 text-gray-300')
+
+  const amountClassName =
+    'p-3 text-right tabular-nums ' + (t.amount < 0 ? 'text-green-400' : 'text-gray-100')
+
   return (
     <>
-      <tr
-        className={`border-t border-gray-800 ${hasDetail ? 'cursor-pointer hover:bg-gray-900/50' : ''}`}
-        onClick={() => hasDetail && setExpanded(!expanded)}
-      >
+      <tr className={rowClassName} onClick={() => hasDetail && setExpanded(!expanded)}>
         <td className="p-3 text-gray-400">{t.txn_date}</td>
         <td className="p-3 text-gray-400">{accountName || '\u2014'}</td>
         <td className="p-3">
@@ -66,21 +74,9 @@ export default function TransactionRow({
           />
         </td>
         <td className="p-3">
-          {t.category_source && (
-            <span
-              className={`rounded-full px-2 py-0.5 text-xs ${
-                sourceBadgeStyles[t.category_source] || 'bg-gray-700 text-gray-300'
-              }`}
-            >
-              {t.category_source}
-            </span>
-          )}
+          {t.category_source && <span className={badgeClassName}>{t.category_source}</span>}
         </td>
-        <td
-          className={`p-3 text-right tabular-nums ${
-            t.amount < 0 ? 'text-green-400' : 'text-gray-100'
-          }`}
-        >
+        <td className={amountClassName}>
           {t.amount < 0 ? '+' : '-'}$
           {Math.abs(t.amount).toFixed(2)}
         </td>
