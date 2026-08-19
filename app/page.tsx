@@ -1,6 +1,7 @@
 import { createClient } from '@/lib/supabase/server'
 import ConnectBankButton from './connect-bank-button'
 import SyncButton from './sync-button'
+import CategorizeButton from './categorize-button'
 
 export default async function Home() {
   const supabase = await createClient()
@@ -16,6 +17,7 @@ export default async function Home() {
       <div className="mb-6 flex gap-3">
         <ConnectBankButton />
         <SyncButton />
+        <CategorizeButton />
       </div>
 
       {error && (
