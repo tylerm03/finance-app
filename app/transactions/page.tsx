@@ -3,7 +3,7 @@ import Link from 'next/link'
 import ConnectBankButton from '../connect-bank-button'
 import SyncButton from '../sync-button'
 import CategorizeButton from '../categorize-button'
-import CategorySelect from './category-select'
+import TransactionRow from './transaction-row'
 
 export default async function TransactionsPage({
   searchParams,
@@ -77,25 +77,7 @@ export default async function TransactionsPage({
             </thead>
             <tbody>
               {transactions.map((t) => (
-                <tr key={t.id} className="border-t border-gray-800">
-                  <td className="p-3 text-gray-400">{t.txn_date}</td>
-                  <td className="p-3">{t.merchant_name}</td>
-                  <td className="p-3">
-                    <CategorySelect
-                      transactionId={t.id}
-                      merchantEntityId={t.merchant_entity_id}
-                      currentCategory={t.category}
-                    />
-                  </td>
-                  <td
-                    className={`p-3 text-right tabular-nums ${
-                      t.amount < 0 ? 'text-green-400' : 'text-gray-100'
-                    }`}
-                  >
-                    {t.amount < 0 ? '+' : '-'}$
-                    {Math.abs(t.amount).toFixed(2)}
-                  </td>
-                </tr>
+                <TransactionRow key={t.id} t={t} />
               ))}
             </tbody>
           </table>
