@@ -10,8 +10,6 @@ export async function POST() {
     return NextResponse.json({ error: 'Not authenticated' }, { status: 401 })
   }
 
-  // Only touch transactions that don't have a category yet — this
-  // route is safe to re-run, it won't re-decide anything already set.
   const { data: transactions, error: txError } = await supabase
     .from('transactions')
     .select('id, merchant_entity_id, plaid_category')
@@ -27,7 +25,6 @@ export async function POST() {
     return NextResponse.json({ tier1: 0, tier2: 0, stillUncategorized: 0 })
   }
 
-  // Load all of this user's rules once, keyed by merchant_entity_id
   const { data: rules } = await supabase
     .from('category_rules')
     .select('merchant_entity_id, category')
@@ -47,13 +44,11 @@ export async function POST() {
     let category: string | null = null
     let source: string | null = null
 
-    // Tier 1: your rules, keyed on the stable merchant id
     if (t.merchant_entity_id && ruleMap.has(t.merchant_entity_id)) {
       category = ruleMap.get(t.merchant_entity_id)!
       source = 'rule'
       tier1++
     } else {
-      // Tier 2: Plaid's category, mapped to yours
       const mapped = mapPlaidCategory(t.plaid_category as any)
       if (mapped !== 'Other') {
         category = mapped
