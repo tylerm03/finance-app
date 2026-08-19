@@ -32,6 +32,7 @@ export default function TransactionRow({
   const [expanded, setExpanded] = useState(false)
   const location: Location = t.location
   const plaidCategory: PlaidCategory = t.plaid_category
+  const websiteUrl = t.website ? 'https://' + t.website : null
 
   const hasDetail =
     plaidCategory?.detailed || t.payment_channel || location?.city || t.website || t.merchant_entity_id
@@ -107,7 +108,7 @@ export default function TransactionRow({
                   <p className="text-xs text-gray-400">Location</p>
                   <p className="text-gray-100">
                     {location.city}
-                    {location.region ? `, ${location.region}` : ''}
+                    {location.region ? ', ' + location.region : ''}
                   </p>
                 </div>
               )}
@@ -119,11 +120,11 @@ export default function TransactionRow({
                   </p>
                 </div>
               )}
-              {t.website && (
+              {websiteUrl && (
                 <div>
                   <p className="text-xs text-gray-400">Website</p>
                   
-                    href={`https://${t.website}`}
+                    href={websiteUrl}
                     target="_blank"
                     rel="noopener noreferrer"
                     className="text-blue-400 hover:underline"
