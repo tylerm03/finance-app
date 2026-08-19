@@ -1,19 +1,50 @@
 import { createClient } from '@/lib/supabase/server'
+import Link from 'next/link'
 import ConnectBankButton from '../connect-bank-button'
 import SyncButton from '../sync-button'
 import CategorizeButton from '../categorize-button'
 
-export default async function TransactionsPage() {
+export default async function TransactionsPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ filter?: string }>
+}) {
+  const { filter } = await searchParams
+  const uncategorizedOnly = filter === 'uncategorized'
+
   const supabase = await createClient()
 
-  const { data: transactions, error } = await supabase
+  let query = supabase
     .from('transactions')
     .select('*')
     .order('txn_date', { ascending: false })
 
+  if (uncategorizedOnly) {
+    query = query.is('category', null)
+  }
+
+  const { data: transactions, error } = await query
+
   return (
     <div className="min-h-screen bg-gray-950 p-6 text-gray-100">
-      <h1 className="mb-6 text-xl font-medium">Transactions</h1>
+      <div className="mb-6 flex items-center justify-between">
+        <h1 className="text-xl font-medium">Transactions</h1>
+        <div className="flex gap-4 text-sm">
+          <Link
+            href="/transactions"
+            className={!uncategorizedOnly ? 'text-blue-400' : 'text-gray-400 hover:text-blue-400'}
+          >
+            All
+          </Link>
+          <Link
+            href="/transactions?filter=uncategorized"
+            className={uncategorizedOnly ? 'text-blue-400' : 'text-gray-400 hover:text-blue-400'}
+          >
+            Uncategorized
+          </Link>
+        </div>
+      </div>
+
       <div className="mb-6 flex gap-3">
         <ConnectBankButton />
         <SyncButton />
@@ -27,7 +58,9 @@ export default async function TransactionsPage() {
       )}
 
       {!error && transactions?.length === 0 && (
-        <p className="text-gray-400">No transactions yet.</p>
+        <p className="text-gray-400">
+          {uncategorizedOnly ? 'Nothing uncategorized \u2014 all caught up.' : 'No transactions yet.'}
+        </p>
       )}
 
       {!error && transactions && transactions.length > 0 && (
@@ -46,7 +79,9 @@ export default async function TransactionsPage() {
                 <tr key={t.id} className="border-t border-gray-800">
                   <td className="p-3 text-gray-400">{t.txn_date}</td>
                   <td className="p-3">{t.merchant_name}</td>
-                  <td className="p-3 text-gray-400">{t.category}</td>
+                  <td className="p-3 text-gray-400">
+                    {t.category || <span className="text-red-400">Uncategorized</span>}
+                  </td>
                   <td
                     className={`p-3 text-right tabular-nums ${
                       t.amount < 0 ? 'text-green-400' : 'text-gray-100'
