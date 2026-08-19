@@ -120,7 +120,8 @@ export default function TransactionRow({
                 <div>
                   <p className="text-xs text-gray-400">Website</p>
                   
-                    href={websiteUrl}
+                    
+                    <a href={websiteUrl}
                     target="_blank"
                     rel="noopener noreferrer"
                     className="text-blue-400 hover:underline"
