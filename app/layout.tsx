@@ -28,6 +28,9 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
         <nav className="border-b border-gray-800 bg-gray-900 px-6 py-3">
           <div className="flex gap-6 text-sm">
             <Link href="/" className="text-gray-100 hover:text-blue-400">
+              Home
+            </Link>
+            <Link href="/transactions" className="text-gray-100 hover:text-blue-400">
               Transactions
             </Link>
             <Link href="/spending" className="text-gray-100 hover:text-blue-400">
