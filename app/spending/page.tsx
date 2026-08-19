@@ -1,0 +1,82 @@
+import { createClient } from '@/lib/supabase/server'
+
+export default async function SpendingPage() {
+  const supabase = await createClient()
+
+  // First day of the current month, in YYYY-MM-DD form
+  const now = new Date()
+  const monthStart = new Date(now.getFullYear(), now.getMonth(), 1)
+    .toISOString()
+    .split('T')[0]
+
+  const { data: transactions, error } = await supabase
+    .from('transactions')
+    .select('category, amount')
+    .gte('txn_date', monthStart)
+    .gt('amount', 0) // exclude income (negative) — spending only
+
+  if (error) {
+    return (
+      <div className="min-h-screen bg-gray-950 p-6 text-gray-100">
+        <p className="rounded border border-red-800 bg-red-950 p-3 text-red-400">
+          Error loading spending: {error.message}
+        </p>
+      </div>
+    )
+  }
+
+  // Group by category
+  const totals = new Map<string, number>()
+  for (const t of transactions || []) {
+    const cat = t.category || 'Other'
+    totals.set(cat, (totals.get(cat) || 0) + Number(t.amount))
+  }
+
+  const sorted = [...totals.entries()].sort((a, b) => b[1] - a[1])
+  const grandTotal = sorted.reduce((sum, [, amt]) => sum + amt, 0)
+  const otherTotal = totals.get('Other') || 0
+  const otherPct = grandTotal > 0 ? (otherTotal / grandTotal) * 100 : 0
+
+  return (
+    <div className="min-h-screen bg-gray-950 p-6 text-gray-100">
+      <h1 className="mb-1 text-xl font-medium">Spending this month</h1>
+      <p className="mb-6 text-4xl font-semibold tabular-nums">
+        ${grandTotal.toFixed(2)}
+      </p>
+
+      {otherPct > 15 && (
+        <p className="mb-4 rounded border border-red-800 bg-red-950 p-2 text-sm text-red-400">
+          {otherPct.toFixed(0)}% of spending is uncategorized — check the Other bucket.
+        </p>
+      )}
+
+      {sorted.length === 0 && (
+        <p className="text-gray-400">No spending recorded yet this month.</p>
+      )}
+
+      {sorted.length > 0 && (
+        <div className="space-y-2">
+          {sorted.map(([category, amount]) => {
+            const pct = grandTotal > 0 ? (amount / grandTotal) * 100 : 0
+            return (
+              <div key={category} className="rounded border border-gray-800 bg-gray-900 p-3">
+                <div className="mb-1 flex items-center justify-between">
+                  <span className={category === 'Other' ? 'text-red-400' : 'text-gray-100'}>
+                    {category}
+                  </span>
+                  <span className="tabular-nums text-gray-100">${amount.toFixed(2)}</span>
+                </div>
+                <div className="h-1.5 w-full rounded-full bg-gray-800">
+                  <div
+                    className="h-1.5 rounded-full bg-blue-500"
+                    style={{ width: `${pct}%` }}
+                  />
+                </div>
+              </div>
+            )
+          })}
+        </div>
+      )}
+    </div>
+  )
+}
