@@ -1,6 +1,7 @@
 import { createClient } from '@/lib/supabase/server'
 import MonthSelector from './month-selector'
 import SpendingPieChart from './spending-pie-chart'
+import SpendingLegend from './spending-legend'
 
 export default async function SpendingPage({
   searchParams,
@@ -67,30 +68,10 @@ export default async function SpendingPage({
       )}
 
       {sorted.length > 0 && (
-        <>
-          <div className="mb-6 rounded border border-gray-800 bg-gray-900 p-4">
-            <SpendingPieChart data={chartData} />
-          </div>
-
-          <div className="space-y-2">
-            {sorted.map(([category, amount]) => {
-              const pct = grandTotal > 0 ? (amount / grandTotal) * 100 : 0
-              return (
-                <div key={category} className="rounded border border-gray-800 bg-gray-900 p-3">
-                  <div className="mb-1 flex items-center justify-between">
-                    <span className={category === 'Other' ? 'text-red-400' : 'text-gray-100'}>
-                      {category}
-                    </span>
-                    <span className="tabular-nums text-gray-100">${amount.toFixed(2)}</span>
-                  </div>
-                  <div className="h-1.5 w-full rounded-full bg-gray-800">
-                    <div className="h-1.5 rounded-full bg-blue-500" style={{ width: pct + '%' }} />
-                  </div>
-                </div>
-              )
-            })}
-          </div>
-        </>
+        <div className="grid grid-cols-1 gap-6 rounded border border-gray-800 bg-gray-900 p-4 sm:grid-cols-2">
+          <SpendingPieChart data={chartData} />
+          <SpendingLegend data={chartData} total={grandTotal} />
+        </div>
       )}
     </div>
   )

@@ -12,7 +12,7 @@ type Slice = { category: string; amount: number }
 
 export default function SpendingPieChart({ data }: { data: Slice[] }) {
   return (
-    <ResponsiveContainer width="100%" height={320}>
+    <ResponsiveContainer width="100%" height={280}>
       <PieChart>
         <Pie
           data={data}
@@ -20,9 +20,9 @@ export default function SpendingPieChart({ data }: { data: Slice[] }) {
           nameKey="category"
           cx="50%"
           cy="50%"
+          innerRadius={70}
           outerRadius={120}
-          label={(entry: any) => entry.category}
-          labelLine={false}
+          paddingAngle={1}
         >
           {data.map((_, i) => (
             <Cell key={i} fill={COLORS[i % COLORS.length]} stroke="#0a0a0b" />
