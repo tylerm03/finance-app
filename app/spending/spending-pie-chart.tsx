@@ -2,11 +2,7 @@
 
 import { PieChart, Pie, Cell, Tooltip, ResponsiveContainer } from 'recharts'
 
-const COLORS = [
-  '#3b82f6', '#60a5fa', '#93c5fd', '#1d4ed8', '#2563eb',
-  '#6366f1', '#818cf8', '#a5b4fc', '#4f46e5', '#4338ca',
-  '#7c3aed', '#8b5cf6', '#a78bfa', '#5b21b6',
-]
+import { CHART_COLORS } from '@/lib/categorization/chart-colors'
 
 type Slice = { category: string; amount: number }
 
@@ -25,7 +21,7 @@ export default function SpendingPieChart({ data }: { data: Slice[] }) {
           paddingAngle={1}
         >
           {data.map((_, i) => (
-            <Cell key={i} fill={COLORS[i % COLORS.length]} stroke="#0a0a0b" />
+            <Cell key={i} fill={CHART_COLORS[i % CHART_COLORS.length]} stroke="#0a0a0b" />
           ))}
         </Pie>
         <Tooltip

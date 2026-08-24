@@ -1,8 +1,4 @@
-const COLORS = [
-  '#3b82f6', '#60a5fa', '#93c5fd', '#1d4ed8', '#2563eb',
-  '#6366f1', '#818cf8', '#a5b4fc', '#4f46e5', '#4338ca',
-  '#7c3aed', '#8b5cf6', '#a78bfa', '#5b21b6',
-]
+import { CHART_COLORS } from '@/lib/categorization/chart-colors'
 
 type Slice = { category: string; amount: number }
 
@@ -22,7 +18,7 @@ export default function SpendingLegend({
             <div className="flex items-center gap-2">
               <span
                 className="h-2.5 w-2.5 rounded-full"
-                style={{ backgroundColor: COLORS[i % COLORS.length] }}
+                style={{ backgroundColor: CHART_COLORS[i % CHART_COLORS.length] }}
               />
               <span className={d.category === 'Other' ? 'text-red-400' : 'text-gray-100'}>
                 {d.category}
