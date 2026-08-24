@@ -21,7 +21,7 @@ export default function SpendingPieChart({ data }: { data: Slice[] }) {
           cx="50%"
           cy="50%"
           outerRadius={120}
-          label={(entry) => entry.category}
+          label={(entry: any) => entry.category}
           labelLine={false}
         >
           {data.map((_, i) => (
@@ -35,7 +35,7 @@ export default function SpendingPieChart({ data }: { data: Slice[] }) {
             borderRadius: '6px',
             color: '#f5f5f5',
           }}
-          formatter={(value: number) => '$' + value.toFixed(2)}
+          formatter={(value: any) => '$' + Number(value).toFixed(2)}
         />
       </PieChart>
     </ResponsiveContainer>
