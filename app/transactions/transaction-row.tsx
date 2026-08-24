@@ -58,7 +58,7 @@ export default function TransactionRow({
             {t.logo_url && (
               <img src={t.logo_url} alt="" className="h-5 w-5 rounded-full" />
             )}
-            <span>{t.merchant_name}</span>
+            <span>{t.merchant_name || t.description || "Unknown"}</span>
             {t.pending && (
               <span className="rounded border border-gray-700 px-1.5 py-0.5 text-xs text-gray-400">
                 pending
@@ -86,7 +86,7 @@ export default function TransactionRow({
           <td colSpan={6} className="p-4">
             <div className="grid grid-cols-2 gap-4 sm:grid-cols-3">
               {plaidCategory?.detailed && (
-                <div>
+                <div className="min-w-0">
                   <p className="text-xs text-gray-400">Detail category</p>
                   <p className="text-gray-100">
                     {plaidCategory.detailed.replaceAll('_', ' ').toLowerCase()}
@@ -94,13 +94,13 @@ export default function TransactionRow({
                 </div>
               )}
               {t.payment_channel && (
-                <div>
+                <div className="min-w-0">
                   <p className="text-xs text-gray-400">Channel</p>
                   <p className="text-gray-100">{t.payment_channel.replaceAll('_', ' ')}</p>
                 </div>
               )}
               {location?.city && (
-                <div>
+                <div className="min-w-0">
                   <p className="text-xs text-gray-400">Location</p>
                   <p className="text-gray-100">
                     {location.city}
@@ -109,7 +109,7 @@ export default function TransactionRow({
                 </div>
               )}
               {plaidCategory?.confidence_level && (
-                <div>
+                <div className="min-w-0">
                   <p className="text-xs text-gray-400">Confidence</p>
                   <p className="text-gray-100">
                     {plaidCategory.confidence_level.replaceAll('_', ' ').toLowerCase()}
@@ -117,7 +117,7 @@ export default function TransactionRow({
                 </div>
               )}
               {websiteUrl && (
-                <div>
+                <div className="min-w-0">
                   <p className="text-xs text-gray-400">Website</p>
                   
                     
@@ -131,7 +131,7 @@ export default function TransactionRow({
                 </div>
               )}
               {t.merchant_entity_id && (
-                <div>
+                <div className="min-w-0">
                   <p className="text-xs text-gray-400">Merchant ID</p>
                   <p className="truncate text-gray-100">{t.merchant_entity_id}</p>
                 </div>
