@@ -60,7 +60,7 @@ export default async function Home() {
         </div>
 
         <Link
-          href="/transactions"
+          href="/transactions?category=__uncategorized__"
           className={`rounded border p-4 ${
             uncategorizedCount > 0
               ? 'border-red-800 bg-red-950'

@@ -1,49 +1,45 @@
 import { createClient } from '@/lib/supabase/server'
-import Link from 'next/link'
 import ConnectBankButton from '../connect-bank-button'
 import SyncButton from '../sync-button'
 import CategorizeButton from '../categorize-button'
 import TransactionRow from './transaction-row'
+import TransactionFilters from './transaction-filters'
 
 export default async function TransactionsPage({
   searchParams,
 }: {
-  searchParams: Promise<{ filter?: string }>
+  searchParams: Promise<{ category?: string; account?: string }>
 }) {
-  const { filter } = await searchParams
-  const uncategorizedOnly = filter === 'uncategorized'
-
+  const { category, account } = await searchParams
   const supabase = await createClient()
+
+  const { data: accounts } = await supabase
+    .from('accounts')
+    .select('id, name')
+    .order('name')
 
   let query = supabase
     .from('transactions')
     .select('*, accounts(name)')
     .order('txn_date', { ascending: false })
 
-  if (uncategorizedOnly) {
+  if (category === '__uncategorized__') {
     query = query.is('category', null)
+  } else if (category) {
+    query = query.eq('category', category)
+  }
+
+  if (account) {
+    query = query.eq('account_id', account)
   }
 
   const { data: transactions, error } = await query
 
   return (
     <div className="min-h-screen bg-gray-950 p-6 text-gray-100">
-      <div className="mb-6 flex items-center justify-between">
+      <div className="mb-6 flex flex-wrap items-center justify-between gap-3">
         <h1 className="text-xl font-medium">Transactions</h1>
-        <div className="flex gap-4 text-sm">
-          <Link
-            href="/transactions"
-            className={!uncategorizedOnly ? 'text-blue-400' : 'text-gray-400 hover:text-blue-400'}
-          >
-            All
-          </Link>
-          <Link
-            href="/transactions?filter=uncategorized"
-            className={uncategorizedOnly ? 'text-blue-400' : 'text-gray-400 hover:text-blue-400'}
-          >
-            Uncategorized
-          </Link>
-        </div>
+        <TransactionFilters accounts={accounts || []} />
       </div>
 
       <div className="mb-6 flex gap-3">
@@ -59,9 +55,7 @@ export default async function TransactionsPage({
       )}
 
       {!error && transactions?.length === 0 && (
-        <p className="text-gray-400">
-          {uncategorizedOnly ? 'Nothing uncategorized \u2014 all caught up.' : 'No transactions yet.'}
-        </p>
+        <p className="text-gray-400">No transactions match these filters.</p>
       )}
 
       {!error && transactions && transactions.length > 0 && (
