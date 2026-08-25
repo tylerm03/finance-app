@@ -8,9 +8,9 @@ import TransactionFilters from './transaction-filters'
 export default async function TransactionsPage({
   searchParams,
 }: {
-  searchParams: Promise<{ category?: string; account?: string }>
+  searchParams: Promise<{ category?: string; account?: string; q?: string }>
 }) {
-  const { category, account } = await searchParams
+  const { category, account, q } = await searchParams
   const supabase = await createClient()
 
   const { data: accounts } = await supabase
@@ -31,6 +31,13 @@ export default async function TransactionsPage({
 
   if (account) {
     query = query.eq('account_id', account)
+  }
+
+  if (q) {
+    const escaped = q.replace(/[%_]/g, '\\$&')
+    query = query.or(
+      'merchant_name.ilike.%' + escaped + '%,description.ilike.%' + escaped + '%'
+    )
   }
 
   const { data: transactions, error } = await query

@@ -1,6 +1,7 @@
 'use client'
 
 import { useRouter, useSearchParams } from 'next/navigation'
+import { useState, useEffect, useRef } from 'react'
 import { CATEGORIES } from '@/lib/categorization/categories'
 
 type Account = { id: string; name: string }
@@ -8,6 +9,8 @@ type Account = { id: string; name: string }
 export default function TransactionFilters({ accounts }: { accounts: Account[] }) {
   const router = useRouter()
   const searchParams = useSearchParams()
+  const [searchText, setSearchText] = useState(searchParams.get('q') || '')
+  const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null)
 
   function updateParam(key: string, value: string) {
     const params = new URLSearchParams(searchParams.toString())
@@ -19,8 +22,27 @@ export default function TransactionFilters({ accounts }: { accounts: Account[] }
     router.push('/transactions?' + params.toString())
   }
 
+  useEffect(() => {
+    if (debounceRef.current) clearTimeout(debounceRef.current)
+    debounceRef.current = setTimeout(() => {
+      updateParam('q', searchText)
+    }, 400)
+    return () => {
+      if (debounceRef.current) clearTimeout(debounceRef.current)
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [searchText])
+
   return (
-    <div className="flex gap-3">
+    <div className="flex flex-wrap gap-3">
+      <input
+        type="text"
+        value={searchText}
+        onChange={(e) => setSearchText(e.target.value)}
+        placeholder="Search transactions..."
+        className="rounded border border-gray-800 bg-gray-900 px-3 py-2 text-sm text-gray-100 placeholder-gray-500"
+      />
+
       <select
         value={searchParams.get('category') || ''}
         onChange={(e) => updateParam('category', e.target.value)}
