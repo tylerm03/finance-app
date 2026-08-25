@@ -39,6 +39,9 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
             <Link href="/recurring" className="text-gray-100 hover:text-blue-400">
               Recurring
             </Link>
+            <Link href="/savings" className="text-gray-100 hover:text-blue-400">
+              Savings
+            </Link>
           </div>
         </nav>
         {children}
