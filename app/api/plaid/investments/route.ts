@@ -41,6 +41,7 @@ export async function POST() {
   let holdingsSynced = 0
   let securitiesSynced = 0
   const errors: string[] = []
+  const debugLog: string[] = []
 
   for (const item of items) {
     try {
@@ -49,9 +50,13 @@ export async function POST() {
       })
 
       const { accounts, holdings, securities } = response.data
+      debugLog.push(
+        item.institution_name + ': raw response had ' + accounts.length + ' accounts, ' +
+        securities.length + ' securities, ' + holdings.length + ' holdings'
+      )
 
       for (const acc of accounts) {
-        await supabase.from('accounts').upsert(
+        const { error } = await supabase.from('accounts').upsert(
           {
             user_id: user.id,
             plaid_account_id: acc.account_id,
@@ -66,11 +71,15 @@ export async function POST() {
           },
           { onConflict: 'plaid_account_id' }
         )
-        accountsSynced++
+        if (error) {
+          errors.push('account upsert failed: ' + error.message)
+        } else {
+          accountsSynced++
+        }
       }
 
       for (const sec of securities) {
-        await supabase.from('securities').upsert(
+        const { error } = await supabase.from('securities').upsert(
           {
             id: sec.security_id,
             name: sec.name,
@@ -83,7 +92,11 @@ export async function POST() {
           },
           { onConflict: 'id' }
         )
-        securitiesSynced++
+        if (error) {
+          errors.push('security upsert failed: ' + error.message)
+        } else {
+          securitiesSynced++
+        }
       }
 
       const { data: accountRows } = await supabase
@@ -97,9 +110,12 @@ export async function POST() {
 
       for (const h of holdings) {
         const accountId = accountMap.get(h.account_id)
-        if (!accountId) continue
+        if (!accountId) {
+          errors.push('holding skipped: no matching account for ' + h.account_id)
+          continue
+        }
 
-        await supabase.from('holdings').upsert(
+        const { error } = await supabase.from('holdings').upsert(
           {
             user_id: user.id,
             account_id: accountId,
@@ -113,7 +129,11 @@ export async function POST() {
           },
           { onConflict: 'account_id,security_id' }
         )
-        holdingsSynced++
+        if (error) {
+          errors.push('holding upsert failed: ' + error.message)
+        } else {
+          holdingsSynced++
+        }
       }
     } catch (error) {
       const message = error instanceof Error ? error.message : 'Unknown error'
@@ -124,5 +144,7 @@ export async function POST() {
     }
   }
 
-  return NextResponse.json({ accountsSynced, holdingsSynced, securitiesSynced, errors })
+  console.log('Investments sync debug:', debugLog, errors)
+
+  return NextResponse.json({ accountsSynced, holdingsSynced, securitiesSynced, errors, debugLog })
 }
