@@ -135,9 +135,10 @@ export async function POST() {
           holdingsSynced++
         }
       }
-    } catch (error) {
-      const message = error instanceof Error ? error.message : 'Unknown error'
-      if (!message.includes('PRODUCTS_NOT_SUPPORTED') && !message.includes('products_not_supported')) {
+    } catch (error: any) {
+      const plaidErrorCode = error?.response?.data?.error_code
+      if (plaidErrorCode !== 'PRODUCTS_NOT_SUPPORTED') {
+        const message = error?.response?.data?.error_message || (error instanceof Error ? error.message : 'Unknown error')
         console.error('Investments sync error for item ' + item.id + ':', error)
         errors.push(item.institution_name + ': ' + message)
       }
