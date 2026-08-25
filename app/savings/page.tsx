@@ -1,12 +1,12 @@
 import { createClient } from '@/lib/supabase/server'
 import ConnectBankButton from '../connect-bank-button'
 import SyncInvestmentsButton from '../sync-investments-button'
+import HoldingsPieChart from './holdings-pie-chart'
+import HoldingsLegend from './holdings-legend'
 
 export default async function SavingsPage() {
   const supabase = await createClient()
 
-  // Only investment-type accounts and savings accounts belong here —
-  // checking/credit accounts stay on the Transactions page.
   const { data: accounts, error: accountsError } = await supabase
     .from('accounts')
     .select('*')
@@ -68,6 +68,12 @@ export default async function SavingsPage() {
                 ? accountHoldings.reduce((s, h) => s + Number(h.institution_value || 0), 0)
                 : Number(account.current_balance || 0)
 
+            const chartData = accountHoldings.map((h) => ({
+              name: h.securities?.ticker_symbol || h.securities?.name || 'Unknown',
+              value: Number(h.institution_value || 0),
+              quantity: Number(h.quantity || 0),
+            }))
+
             return (
               <div key={account.id} className="overflow-hidden rounded-lg border border-gray-800">
                 <div className="flex items-center justify-between bg-gray-900 p-3">
@@ -79,37 +85,10 @@ export default async function SavingsPage() {
                 </div>
 
                 {accountHoldings.length > 0 ? (
-                  <table className="w-full text-sm">
-                    <thead className="bg-gray-900/50 text-gray-400">
-                      <tr>
-                        <th className="p-3 text-left">Security</th>
-                        <th className="p-3 text-right">Quantity</th>
-                        <th className="p-3 text-right">Price</th>
-                        <th className="p-3 text-right">Value</th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {accountHoldings.map((h) => (
-                        <tr key={h.id} className="border-t border-gray-800">
-                          <td className="p-3">
-                            {h.securities?.name || 'Unknown security'}
-                            {h.securities?.ticker_symbol && (
-                              <span className="ml-2 text-gray-400">{h.securities.ticker_symbol}</span>
-                            )}
-                          </td>
-                          <td className="p-3 text-right tabular-nums text-gray-100">
-                            {Number(h.quantity).toFixed(3)}
-                          </td>
-                          <td className="p-3 text-right tabular-nums text-gray-100">
-                            ${Number(h.institution_price || 0).toFixed(2)}
-                          </td>
-                          <td className="p-3 text-right tabular-nums text-gray-100">
-                            ${Number(h.institution_value || 0).toFixed(2)}
-                          </td>
-                        </tr>
-                      ))}
-                    </tbody>
-                  </table>
+                  <div className="grid grid-cols-1 gap-4 p-4 sm:grid-cols-2">
+                    <HoldingsPieChart data={chartData} />
+                    <HoldingsLegend data={chartData} total={accountTotal} />
+                  </div>
                 ) : (
                   <p className="p-3 text-sm text-gray-400">Cash balance, no holdings.</p>
                 )}
