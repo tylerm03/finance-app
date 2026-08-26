@@ -49,6 +49,7 @@ export default async function AssetsPage() {
                 </div>
                 <RefreshValueButton
                   assetId={asset.id}
+                  vin={asset.vin}
                   year={asset.year}
                   make={asset.make}
                   model={asset.model}

@@ -6,6 +6,7 @@ import { createClient } from '@/lib/supabase/client'
 
 export default function AddVehicleForm() {
   const [open, setOpen] = useState(false)
+  const [vin, setVin] = useState('')
   const [year, setYear] = useState('')
   const [make, setMake] = useState('')
   const [model, setModel] = useState('')
@@ -33,6 +34,7 @@ export default function AddVehicleForm() {
         user_id: user.id,
         name,
         type: 'vehicle',
+        vin: vin || null,
         year: year ? parseInt(year) : null,
         make,
         model,
@@ -43,16 +45,16 @@ export default function AddVehicleForm() {
       .single()
 
     if (!error && asset) {
-      // Kick off the value lookup right away so the card isn't empty
       await fetch('/api/assets/lookup-value', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ assetId: asset.id, year, make, model, trim, mileage }),
+        body: JSON.stringify({ assetId: asset.id, vin, year, make, model, trim, mileage }),
       })
     }
 
     setSaving(false)
     setOpen(false)
+    setVin('')
     setYear('')
     setMake('')
     setModel('')
@@ -74,6 +76,16 @@ export default function AddVehicleForm() {
 
   return (
     <form onSubmit={handleSubmit} className="flex flex-wrap items-end gap-3 rounded border border-gray-800 bg-gray-900 p-4">
+      <div>
+        <label className="mb-1 block text-xs text-gray-400">VIN (optional, more accurate)</label>
+        <input
+          type="text"
+          value={vin}
+          onChange={(e) => setVin(e.target.value)}
+          placeholder="1HGBH41JXMN109186"
+          className="w-44 rounded border border-gray-800 bg-gray-950 px-3 py-2 text-sm text-gray-100"
+        />
+      </div>
       <div>
         <label className="mb-1 block text-xs text-gray-400">Year</label>
         <input

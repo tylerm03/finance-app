@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation'
 
 export default function RefreshValueButton({
   assetId,
+  vin,
   year,
   make,
   model,
@@ -12,6 +13,7 @@ export default function RefreshValueButton({
   mileage,
 }: {
   assetId: string
+  vin: string | null
   year: number | null
   make: string | null
   model: string | null
@@ -26,7 +28,7 @@ export default function RefreshValueButton({
     await fetch('/api/assets/lookup-value', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ assetId, year, make, model, trim, mileage }),
+      body: JSON.stringify({ assetId, vin, year, make, model, trim, mileage }),
     })
     setLoading(false)
     router.refresh()
