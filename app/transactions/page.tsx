@@ -2,6 +2,7 @@ import { createClient } from '@/lib/supabase/server'
 import ConnectBankButton from '../connect-bank-button'
 import SyncButton from '../sync-button'
 import CategorizeButton from '../categorize-button'
+import RefreshBalancesButton from '../refresh-balances-button'
 import TransactionRow from './transaction-row'
 import TransactionFilters from './transaction-filters'
 
@@ -53,6 +54,7 @@ export default async function TransactionsPage({
         <ConnectBankButton />
         <SyncButton />
         <CategorizeButton />
+        <RefreshBalancesButton />
       </div>
 
       {error && (
