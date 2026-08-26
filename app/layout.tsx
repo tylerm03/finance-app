@@ -42,6 +42,9 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
             <Link href="/savings" className="text-gray-100 hover:text-blue-400">
               Savings
             </Link>
+            <Link href="/assets" className="text-gray-100 hover:text-blue-400">
+              Assets
+            </Link>
           </div>
         </nav>
         {children}
