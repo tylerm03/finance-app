@@ -1,6 +1,7 @@
 import { createClient } from '@/lib/supabase/server'
 import ConnectBankButton from '../connect-bank-button'
 import SyncInvestmentsButton from '../sync-investments-button'
+import AddManualAccount from './add-manual-account'
 import HoldingsPieChart from './holdings-pie-chart'
 import HoldingsLegend from './holdings-legend'
 
@@ -10,7 +11,7 @@ export default async function SavingsPage() {
   const { data: accounts, error: accountsError } = await supabase
     .from('accounts')
     .select('*')
-    .or('type.eq.investment,subtype.eq.savings')
+    .or('type.eq.investment,subtype.eq.savings,subtype.eq.checking')
     .order('name')
 
   const { data: holdings, error: holdingsError } = await supabase
@@ -43,6 +44,12 @@ export default async function SavingsPage() {
     return sum + Number(a.current_balance || 0)
   }, 0)
 
+  function cashLabel(subtype: string | null) {
+    if (subtype === 'checking') return 'Checking balance'
+    if (subtype === 'savings') return 'Savings balance'
+    return 'Cash balance, no holdings'
+  }
+
   return (
     <div className="min-h-screen bg-gray-950 p-6 text-gray-100">
       <p className="mb-1 text-sm text-gray-400">Total savings & investments</p>
@@ -51,11 +58,12 @@ export default async function SavingsPage() {
       <div className="mb-6 flex gap-3">
         <ConnectBankButton />
         <SyncInvestmentsButton />
+        <AddManualAccount />
       </div>
 
       {(!accounts || accounts.length === 0) && (
         <p className="text-gray-400">
-          No savings or investment accounts yet — connect Schwab above, then click Sync investments.
+          No savings or investment accounts yet — connect a bank above, then click Sync investments.
         </p>
       )}
 
@@ -90,7 +98,7 @@ export default async function SavingsPage() {
                     <HoldingsLegend data={chartData} total={accountTotal} />
                   </div>
                 ) : (
-                  <p className="p-3 text-sm text-gray-400">Cash balance, no holdings.</p>
+                  <p className="p-3 text-sm text-gray-400">{cashLabel(account.subtype)}</p>
                 )}
               </div>
             )
