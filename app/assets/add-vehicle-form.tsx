@@ -7,18 +7,16 @@ import { createClient } from '@/lib/supabase/client'
 export default function AddVehicleForm() {
   const [open, setOpen] = useState(false)
   const [vin, setVin] = useState('')
-  const [year, setYear] = useState('')
-  const [make, setMake] = useState('')
-  const [model, setModel] = useState('')
-  const [trim, setTrim] = useState('')
   const [mileage, setMileage] = useState('')
   const [saving, setSaving] = useState(false)
+  const [error, setError] = useState<string | null>(null)
   const router = useRouter()
   const supabase = createClient()
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault()
     setSaving(true)
+    setError(null)
 
     const { data: { user } } = await supabase.auth.getUser()
     if (!user) {
@@ -26,15 +24,47 @@ export default function AddVehicleForm() {
       return
     }
 
+    // Decode the VIN via NHTSA's free public vPIC API to get
+    // year/make/model/trim automatically.
+    let year: string | null = null
+    let make: string | null = null
+    let model: string | null = null
+    let trim: string | null = null
+
+    try {
+      const decodeRes = await fetch(
+        'https://vpic.nhtsa.dot.gov/api/vehicles/decodevin/' + vin + '?format=json'
+      )
+      const decodeData = await decodeRes.json()
+      const results = decodeData.Results || []
+      const findValue = (variable: string) =>
+        results.find((r: any) => r.Variable === variable)?.Value || null
+
+      year = findValue('Model Year')
+      make = findValue('Make')
+      model = findValue('Model')
+      trim = findValue('Trim')
+    } catch {
+      setError('Could not decode VIN — check that it was entered correctly.')
+      setSaving(false)
+      return
+    }
+
+    if (!make || !model) {
+      setError('VIN could not be decoded. Double check it and try again.')
+      setSaving(false)
+      return
+    }
+
     const name = [year, make, model].filter(Boolean).join(' ')
 
-    const { data: asset, error } = await supabase
+    const { data: asset, error: insertError } = await supabase
       .from('assets')
       .insert({
         user_id: user.id,
         name,
         type: 'vehicle',
-        vin: vin || null,
+        vin,
         year: year ? parseInt(year) : null,
         make,
         model,
@@ -44,7 +74,7 @@ export default function AddVehicleForm() {
       .select()
       .single()
 
-    if (!error && asset) {
+    if (!insertError && asset) {
       await fetch('/api/assets/lookup-value', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -55,10 +85,6 @@ export default function AddVehicleForm() {
     setSaving(false)
     setOpen(false)
     setVin('')
-    setYear('')
-    setMake('')
-    setModel('')
-    setTrim('')
     setMileage('')
     router.refresh()
   }
@@ -77,56 +103,14 @@ export default function AddVehicleForm() {
   return (
     <form onSubmit={handleSubmit} className="flex flex-wrap items-end gap-3 rounded border border-gray-800 bg-gray-900 p-4">
       <div>
-        <label className="mb-1 block text-xs text-gray-400">VIN (optional, more accurate)</label>
+        <label className="mb-1 block text-xs text-gray-400">VIN</label>
         <input
           type="text"
           value={vin}
           onChange={(e) => setVin(e.target.value)}
           placeholder="1HGBH41JXMN109186"
-          className="w-44 rounded border border-gray-800 bg-gray-950 px-3 py-2 text-sm text-gray-100"
-        />
-      </div>
-      <div>
-        <label className="mb-1 block text-xs text-gray-400">Year</label>
-        <input
-          type="number"
-          value={year}
-          onChange={(e) => setYear(e.target.value)}
-          placeholder="2022"
           required
-          className="w-24 rounded border border-gray-800 bg-gray-950 px-3 py-2 text-sm text-gray-100"
-        />
-      </div>
-      <div>
-        <label className="mb-1 block text-xs text-gray-400">Make</label>
-        <input
-          type="text"
-          value={make}
-          onChange={(e) => setMake(e.target.value)}
-          placeholder="Honda"
-          required
-          className="rounded border border-gray-800 bg-gray-950 px-3 py-2 text-sm text-gray-100"
-        />
-      </div>
-      <div>
-        <label className="mb-1 block text-xs text-gray-400">Model</label>
-        <input
-          type="text"
-          value={model}
-          onChange={(e) => setModel(e.target.value)}
-          placeholder="Civic"
-          required
-          className="rounded border border-gray-800 bg-gray-950 px-3 py-2 text-sm text-gray-100"
-        />
-      </div>
-      <div>
-        <label className="mb-1 block text-xs text-gray-400">Trim (optional)</label>
-        <input
-          type="text"
-          value={trim}
-          onChange={(e) => setTrim(e.target.value)}
-          placeholder="EX"
-          className="rounded border border-gray-800 bg-gray-950 px-3 py-2 text-sm text-gray-100"
+          className="w-48 rounded border border-gray-800 bg-gray-950 px-3 py-2 text-sm text-gray-100"
         />
       </div>
       <div>
@@ -144,7 +128,7 @@ export default function AddVehicleForm() {
         disabled={saving}
         className="rounded bg-blue-500 px-4 py-2 text-sm font-medium text-white hover:bg-blue-400 disabled:opacity-50"
       >
-        {saving ? 'Looking up value...' : 'Save'}
+        {saving ? 'Decoding VIN & looking up value...' : 'Save'}
       </button>
       <button
         type="button"
@@ -153,6 +137,7 @@ export default function AddVehicleForm() {
       >
         Cancel
       </button>
+      {error && <p className="w-full text-sm text-red-400">{error}</p>}
     </form>
   )
 }
