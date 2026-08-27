@@ -1,12 +1,34 @@
 import { NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
 
+const DAILY_LIMIT = 10
+
 export async function POST(request: Request) {
   const supabase = await createClient()
   const { data: { user } } = await supabase.auth.getUser()
 
   if (!user) {
     return NextResponse.json({ error: 'Not authenticated' }, { status: 401 })
+  }
+
+  const today = new Date().toISOString().split('T')[0]
+  const { count, error: countError } = await supabase
+    .from('api_usage_log')
+    .select('id', { count: 'exact', head: true })
+    .eq('user_id', user.id)
+    .eq('api_name', 'gemini_grounding')
+    .eq('used_on', today)
+
+  if (countError) {
+    console.error('Error checking usage:', countError)
+    return NextResponse.json({ error: countError.message }, { status: 500 })
+  }
+
+  if ((count || 0) >= DAILY_LIMIT) {
+    return NextResponse.json(
+      { error: 'Daily limit of ' + DAILY_LIMIT + ' value lookups reached. Try again tomorrow.' },
+      { status: 429 }
+    )
   }
 
   const { assetId, vin, year, make, model, trim, mileage } = await request.json()
@@ -37,9 +59,15 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: 'GEMINI_API_KEY is not set' }, { status: 500 })
   }
 
+  await supabase.from('api_usage_log').insert({
+    user_id: user.id,
+    api_name: 'gemini_grounding',
+    used_on: today,
+  })
+
   try {
     const response = await fetch(
-      'https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=' +
+      'https://generativelanguage.googleapis.com/v1beta/models/gemini-3.6-flash:generateContent?key=' +
         process.env.GEMINI_API_KEY,
       {
         method: 'POST',
