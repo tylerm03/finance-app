@@ -1,6 +1,7 @@
 import { createClient } from '@/lib/supabase/server'
 import AddVehicleForm from './add-vehicle-form'
 import RefreshValueButton from './refresh-value-button'
+import DeleteAssetButton from './delete-asset-button'
 
 export default async function AssetsPage() {
   const supabase = await createClient()
@@ -65,6 +66,9 @@ export default async function AssetsPage() {
                   Updated {new Date(asset.value_updated_at).toLocaleDateString()}
                 </p>
               )}
+              <div className="mt-3 border-t border-gray-800 pt-3">
+                <DeleteAssetButton assetId={asset.id} />
+              </div>
             </div>
           ))}
         </div>
