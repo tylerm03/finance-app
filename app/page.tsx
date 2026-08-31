@@ -11,11 +11,22 @@ export default async function Home() {
   const lastMonthStart = new Date(now.getFullYear(), now.getMonth() - 1, 1).toISOString().split('T')[0]
   const lastMonthEnd = new Date(now.getFullYear(), now.getMonth(), 0).toISOString().split('T')[0]
 
-  const [thisMonthRes, lastMonthRes, uncategorizedRes, upcomingRes] = await Promise.all([
+  const [
+    thisMonthRes,
+    lastMonthRes,
+    uncategorizedRes,
+    upcomingRes,
+    savingsAccountsRes,
+    holdingsRes,
+    assetsRes,
+  ] = await Promise.all([
     supabase.from('transactions').select('amount').gte('txn_date', monthStart).gt('amount', 0),
     supabase.from('transactions').select('amount').gte('txn_date', lastMonthStart).lte('txn_date', lastMonthEnd).gt('amount', 0),
     supabase.from('transactions').select('id', { count: 'exact', head: true }).is('category', null),
     supabase.from('recurring_obligations').select('*').eq('is_active', true).neq('status', 'cleared').order('next_due_date', { ascending: true }).limit(3),
+    supabase.from('accounts').select('id, current_balance').or('type.eq.investment,subtype.eq.savings,subtype.eq.checking'),
+    supabase.from('holdings').select('account_id, institution_value'),
+    supabase.from('assets').select('current_value'),
   ])
 
   const spentThisMonth = (thisMonthRes.data || []).reduce((s, t) => s + Number(t.amount), 0)
@@ -23,18 +34,46 @@ export default async function Home() {
   const uncategorizedCount = uncategorizedRes.count || 0
   const upcoming = upcomingRes.data || []
 
-  // "On track": compare this month's pace to last month's pace at the
-  // same point in the month
+  // Net worth: for each savings/investment account, use its holdings
+  // total if it has holdings, otherwise its plain cash balance — same
+  // logic as the Savings page — plus every tracked asset's value.
+  const holdingsByAccount = new Map<string, number>()
+  for (const h of holdingsRes.data || []) {
+    holdingsByAccount.set(
+      h.account_id,
+      (holdingsByAccount.get(h.account_id) || 0) + Number(h.institution_value || 0)
+    )
+  }
+
+  const savingsTotal = (savingsAccountsRes.data || []).reduce((sum, a) => {
+    const holdingsValue = holdingsByAccount.get(a.id)
+    return sum + (holdingsValue !== undefined ? holdingsValue : Number(a.current_balance || 0))
+  }, 0)
+
+  const assetsTotal = (assetsRes.data || []).reduce((sum, a) => sum + Number(a.current_value || 0), 0)
+
+  const netWorth = savingsTotal + assetsTotal
+
   const expectedPaceAmount = spentLastMonth * (dayOfMonth / daysInMonth)
   const paceDiff = spentThisMonth - expectedPaceAmount
   const onTrack = spentLastMonth === 0 || paceDiff <= expectedPaceAmount * 0.1
 
   return (
     <div className="min-h-screen bg-gray-950 p-6 text-gray-100">
-      <p className="mb-1 text-sm text-gray-400">Spent this month</p>
-      <p className="mb-8 text-6xl font-semibold tabular-nums">
-        ${spentThisMonth.toFixed(2)}
-      </p>
+      <div className="mb-8 grid grid-cols-1 gap-6 sm:grid-cols-2">
+        <div>
+          <p className="mb-1 text-sm text-gray-400">Spent this month</p>
+          <p className="text-5xl font-semibold tabular-nums">
+            ${spentThisMonth.toFixed(2)}
+          </p>
+        </div>
+        <div>
+          <p className="mb-1 text-sm text-gray-400">Net worth</p>
+          <p className="text-5xl font-semibold tabular-nums text-blue-400">
+            ${netWorth.toFixed(2)}
+          </p>
+        </div>
+      </div>
 
       <div className="mb-8 grid grid-cols-1 gap-4 sm:grid-cols-3">
         <div className="rounded border border-gray-800 bg-gray-900 p-4">
