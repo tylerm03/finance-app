@@ -45,13 +45,16 @@ export async function POST(request: Request) {
   }
 
   const promptParts = [
-    'Find the current CarMax value of ' + subject + mileageText + '.',
-    'Search specifically on carmax.com for this vehicle or comparable listings.',
-    'Only use CarMax as a source, not other sites.',
-    'If CarMax has no relevant listings or data for this vehicle, say so clearly',
-    'in source_note rather than substituting a different source.',
+    'Find the current TRADE-IN value (not retail price, not private-party price,',
+    'not a dealer\u2019s asking price) of ' + subject + mileageText + '.',
+    'Trade-in value is what a dealer would offer to buy this car from its owner,',
+    'which is meaningfully lower than retail listing prices. Search KBB trade-in',
+    'value, Edmunds trade-in appraisal, and similar dealer-offer-style tools',
+    'specifically \u2014 not retail listings or asking prices from sites like CarMax,',
+    'AutoTrader, or Cars.com, which reflect what a dealer sells FOR, not what',
+    'they pay to acquire a car.',
     'Respond with ONLY a JSON object, no other text, no markdown fences, in this exact format:',
-    '{"estimated_value": <number>, "value_range_low": <number>, "value_range_high": <number>, "source_note": "<one or two sentences on what you found, mentioning CarMax specifically>"}',
+    '{"estimated_value": <number>, "value_range_low": <number>, "value_range_high": <number>, "source_note": "<one or two sentences on what you found, confirming this is trade-in value specifically>"}',
   ]
   const prompt = promptParts.join(' ')
 
