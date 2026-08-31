@@ -24,8 +24,6 @@ export default function AddVehicleForm() {
       return
     }
 
-    // Decode the VIN via NHTSA's free public vPIC API to get
-    // year/make/model/trim automatically.
     let year: string | null = null
     let make: string | null = null
     let model: string | null = null
@@ -58,28 +56,24 @@ export default function AddVehicleForm() {
 
     const name = [year, make, model].filter(Boolean).join(' ')
 
-    const { data: asset, error: insertError } = await supabase
-      .from('assets')
-      .insert({
-        user_id: user.id,
-        name,
-        type: 'vehicle',
-        vin,
-        year: year ? parseInt(year) : null,
-        make,
-        model,
-        trim,
-        mileage: mileage ? parseInt(mileage) : null,
-      })
-      .select()
-      .single()
+    // Just save the vehicle — no automatic value lookup. Use the
+    // "Refresh value" button on the card when you want a price.
+    const { error: insertError } = await supabase.from('assets').insert({
+      user_id: user.id,
+      name,
+      type: 'vehicle',
+      vin,
+      year: year ? parseInt(year) : null,
+      make,
+      model,
+      trim,
+      mileage: mileage ? parseInt(mileage) : null,
+    })
 
-    if (!insertError && asset) {
-      await fetch('/api/assets/lookup-value', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ assetId: asset.id, vin, year, make, model, trim, mileage }),
-      })
+    if (insertError) {
+      setError(insertError.message)
+      setSaving(false)
+      return
     }
 
     setSaving(false)
@@ -128,7 +122,7 @@ export default function AddVehicleForm() {
         disabled={saving}
         className="rounded bg-blue-500 px-4 py-2 text-sm font-medium text-white hover:bg-blue-400 disabled:opacity-50"
       >
-        {saving ? 'Decoding VIN & looking up value...' : 'Save'}
+        {saving ? 'Decoding VIN...' : 'Save'}
       </button>
       <button
         type="button"

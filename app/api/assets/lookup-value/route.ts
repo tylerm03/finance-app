@@ -44,16 +44,16 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: 'No VIN or make/model/year provided' }, { status: 400 })
   }
 
-  const prompt =
-    'Find the current market value of ' + subject + mileageText + '. ' +
-    'Search for comparable listings and pricing data from sources like Cars.com, ' +
-    'AutoTrader, CarGurus, CarMax, Edmunds, and KBB. Look for actual asking prices ' +
-    'or sold prices for similar vehicles (same year/make/model/trim, similar mileage), ' +
-    'not just generic pricing guides. If this is an uncommon vehicle with limited ' +
-    'listings, say so in source_note and give your best estimate based on whatever ' +
-    'comparable data you can find, being clear about the uncertainty. ' +
-    'Respond with ONLY a JSON object, no other text, no markdown fences, in this exact format: ' +
-    '{"estimated_value": <number>, "value_range_low": <number>, "value_range_high": <number>, "source_note": "<one or two sentences on what you found and how confident you are>"}'
+  const promptParts = [
+    'Find the current CarMax value of ' + subject + mileageText + '.',
+    'Search specifically on carmax.com for this vehicle or comparable listings.',
+    'Only use CarMax as a source, not other sites.',
+    'If CarMax has no relevant listings or data for this vehicle, say so clearly',
+    'in source_note rather than substituting a different source.',
+    'Respond with ONLY a JSON object, no other text, no markdown fences, in this exact format:',
+    '{"estimated_value": <number>, "value_range_low": <number>, "value_range_high": <number>, "source_note": "<one or two sentences on what you found, mentioning CarMax specifically>"}',
+  ]
+  const prompt = promptParts.join(' ')
 
   if (!process.env.GEMINI_API_KEY) {
     return NextResponse.json({ error: 'GEMINI_API_KEY is not set' }, { status: 500 })
