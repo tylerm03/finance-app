@@ -45,18 +45,12 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: 'No VIN or make/model/year provided' }, { status: 400 })
   }
 
-  // Deterministic methodology, not vague "estimate the value" — Gemini
-  // finds real asking-price listings and reports their average. We
-  // apply the 12% trade-in discount ourselves in code, so the math is
-  // consistent every time rather than left to the model's judgment.
+  // Kept deliberately short — fewer listings requested, brief source
+  // note — since speed matters more than exhaustiveness here.
   const promptParts = [
-    'Search for current for-sale listings (asking prices, not sold prices) for',
-    subject + mileageText + ', from sites like Cars.com, AutoTrader, CarGurus,',
-    'and CarMax. Find at least 3-5 comparable listings if possible (same or',
-    'similar year/make/model/trim, similar mileage).',
-    'Calculate the average asking price across the listings you find.',
-    'Respond with ONLY a JSON object, no other text, no markdown fences, in this exact format:',
-    '{"average_listing_price": <number>, "listings_found": <number>, "source_note": "<one or two sentences on what listings you found and their price range>"}',
+    'Search for 2-3 current for-sale listings for ' + subject + mileageText + '.',
+    'Respond with ONLY this JSON, no other text:',
+    '{"average_listing_price": <number>, "listings_found": <number>, "source_note": "<one short sentence>"}',
   ]
   const prompt = promptParts.join(' ')
 
@@ -80,6 +74,9 @@ export async function POST(request: Request) {
         body: JSON.stringify({
           contents: [{ parts: [{ text: prompt }] }],
           tools: [{ google_search: {} }],
+          generationConfig: {
+            thinkingConfig: { thinkingBudget: 0 },
+          },
         }),
       }
     )
