@@ -2,7 +2,7 @@ import { NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
 
 const DAILY_LIMIT = 10
-const TRADE_IN_DISCOUNT = 0.12
+const TRADE_IN_DISCOUNT = 0.15
 
 export async function POST(request: Request) {
   const supabase = await createClient()
