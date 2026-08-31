@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
 
 const DAILY_LIMIT = 10
+const TRADE_IN_DISCOUNT = 0.12
 
 export async function POST(request: Request) {
   const supabase = await createClient()
@@ -44,17 +45,18 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: 'No VIN or make/model/year provided' }, { status: 400 })
   }
 
+  // Deterministic methodology, not vague "estimate the value" — Gemini
+  // finds real asking-price listings and reports their average. We
+  // apply the 12% trade-in discount ourselves in code, so the math is
+  // consistent every time rather than left to the model's judgment.
   const promptParts = [
-    'Find the current TRADE-IN value (not retail price, not private-party price,',
-    'not a dealer\u2019s asking price) of ' + subject + mileageText + '.',
-    'Trade-in value is what a dealer would offer to buy this car from its owner,',
-    'which is meaningfully lower than retail listing prices. Search KBB trade-in',
-    'value, Edmunds trade-in appraisal, and similar dealer-offer-style tools',
-    'specifically \u2014 not retail listings or asking prices from sites like CarMax,',
-    'AutoTrader, or Cars.com, which reflect what a dealer sells FOR, not what',
-    'they pay to acquire a car.',
+    'Search for current for-sale listings (asking prices, not sold prices) for',
+    subject + mileageText + ', from sites like Cars.com, AutoTrader, CarGurus,',
+    'and CarMax. Find at least 3-5 comparable listings if possible (same or',
+    'similar year/make/model/trim, similar mileage).',
+    'Calculate the average asking price across the listings you find.',
     'Respond with ONLY a JSON object, no other text, no markdown fences, in this exact format:',
-    '{"estimated_value": <number>, "value_range_low": <number>, "value_range_high": <number>, "source_note": "<one or two sentences on what you found, confirming this is trade-in value specifically>"}',
+    '{"average_listing_price": <number>, "listings_found": <number>, "source_note": "<one or two sentences on what listings you found and their price range>"}',
   ]
   const prompt = promptParts.join(' ')
 
@@ -114,11 +116,22 @@ export async function POST(request: Request) {
       )
     }
 
+    const averagePrice = Number(parsed.average_listing_price) || 0
+    const estimatedValue = Math.round(averagePrice * (1 - TRADE_IN_DISCOUNT))
+
+    const result = {
+      estimated_value: estimatedValue,
+      average_listing_price: averagePrice,
+      discount_applied: TRADE_IN_DISCOUNT,
+      listings_found: parsed.listings_found,
+      source_note: parsed.source_note,
+    }
+
     if (assetId) {
       const { error: updateError } = await supabase
         .from('assets')
         .update({
-          current_value: parsed.estimated_value,
+          current_value: estimatedValue,
           value_source: 'gemini_search',
           value_updated_at: new Date().toISOString(),
           vin: vin || undefined,
@@ -132,7 +145,7 @@ export async function POST(request: Request) {
       }
     }
 
-    return NextResponse.json(parsed)
+    return NextResponse.json(result)
   } catch (error) {
     const message = error instanceof Error ? error.message : 'Unknown error'
     console.error('Value lookup error:', error)
