@@ -74,9 +74,6 @@ export async function POST(request: Request) {
         body: JSON.stringify({
           contents: [{ parts: [{ text: prompt }] }],
           tools: [{ google_search: {} }],
-          generationConfig: {
-            thinkingConfig: { thinkingBudget: 0 },
-          },
         }),
       }
     )
