@@ -13,7 +13,7 @@ export async function POST() {
 
   const { data: transactions, error: txError } = await supabase
     .from('transactions')
-    .select('id, merchant_entity_id, merchant_name, description, plaid_category, accounts(type)')
+    .select('id, merchant_entity_id, merchant_name, description, plaid_category')
     .eq('user_id', user.id)
     .is('category', null)
 
@@ -40,7 +40,6 @@ export async function POST() {
   let tier1 = 0
   let tier2 = 0
   const tier3Candidates: { id: string; merchant_name: string | null; description: string | null }[] = []
-  let skippedNonCredit = 0
 
   for (const t of transactions) {
     if (t.merchant_entity_id && ruleMap.has(t.merchant_entity_id)) {
@@ -62,22 +61,17 @@ export async function POST() {
       continue
     }
 
-    // Tier 3 (AI) only runs on credit card accounts, per your request —
-    // everything else stays uncategorized rather than getting an AI guess.
-    const accountType = (t as any).accounts?.type
-    if (accountType === 'credit') {
-      tier3Candidates.push({
-        id: t.id,
-        merchant_name: t.merchant_name,
-        description: t.description,
-      })
-    } else {
-      skippedNonCredit++
-    }
+    // Tier 3 (AI) — applies to any remaining uncategorized transaction,
+    // regardless of account type.
+    tier3Candidates.push({
+      id: t.id,
+      merchant_name: t.merchant_name,
+      description: t.description,
+    })
   }
 
   let tier3 = 0
-  let stillUncategorized = skippedNonCredit
+  let stillUncategorized = 0
 
   if (tier3Candidates.length > 0 && process.env.GEMINI_API_KEY) {
     try {
@@ -141,8 +135,6 @@ export async function POST() {
       stillUncategorized += tier3Candidates.length
     }
   } else if (tier3Candidates.length > 0) {
-    // No Gemini key set — these stay uncategorized rather than
-    // silently pretending they were handled.
     stillUncategorized += tier3Candidates.length
   }
 
