@@ -35,7 +35,7 @@ export default function CashFlowSankey({ nodes, links }: { nodes: Node[]; links:
       height={Math.max(320, nodes.length * 32)}
       data={{ nodes, links }}
       node={<CustomNode />}
-      link={{ stroke: '#fb923c', strokeOpacity: 0.2 }}
+      link={{ stroke: '#ff8237', strokeOpacity: 0.2 }}
       nodePadding={24}
       margin={{ left: 100, right: 140, top: 20, bottom: 20 }}
     >

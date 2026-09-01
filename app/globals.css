@@ -10,6 +10,16 @@
   --color-foreground: var(--foreground);
   --font-sans: var(--font-geist-sans);
   --font-mono: var(--font-geist-mono);
+
+  /* Custom "Pumpkin" orange, replacing Tailwind's default orange scale
+     everywhere the app already uses orange-* classes */
+  --color-orange-50: #fff4ec;
+  --color-orange-100: #ffe3cc;
+  --color-orange-200: #ffc79a;
+  --color-orange-300: #ffab68;
+  --color-orange-400: #ff9650;
+  --color-orange-500: #ff8237;
+  --color-orange-600: #e86b1f;
 }
 
 @media (prefers-color-scheme: dark) {
