@@ -25,7 +25,8 @@ export default function CategorizeButton() {
     }
 
     setSummary(
-      `Categorized: ${data.tier1} by rule, ${data.tier2} by Plaid mapping, ${data.stillUncategorized} still uncategorized`
+      'Categorized: ' + data.tier1 + ' by rule, ' + data.tier2 + ' by Plaid mapping, ' +
+      data.tier3 + ' by AI, ' + data.stillUncategorized + ' still uncategorized'
     )
     router.refresh()
   }
