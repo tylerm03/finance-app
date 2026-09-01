@@ -20,11 +20,11 @@ export default function HoldingsLegend({
                 className="h-2.5 w-2.5 shrink-0 rounded-full"
                 style={{ backgroundColor: CHART_COLORS[i % CHART_COLORS.length] }}
               />
-              <span className="text-gray-100">{d.name}</span>
+              <span className="text-gray-900">{d.name}</span>
             </div>
             <div className="flex items-center gap-3">
-              <span className="text-gray-400">{pct.toFixed(0)}%</span>
-              <span className="tabular-nums text-gray-100">${d.value.toFixed(2)}</span>
+              <span className="text-gray-500">{pct.toFixed(0)}%</span>
+              <span className="tabular-nums text-gray-900">${d.value.toFixed(2)}</span>
             </div>
           </div>
         )

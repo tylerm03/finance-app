@@ -38,7 +38,7 @@ export default function RefreshValueButton({
     <button
       onClick={handleClick}
       disabled={loading}
-      className="rounded border border-gray-700 px-3 py-1 text-xs text-gray-300 hover:border-blue-500 hover:text-blue-400 disabled:opacity-50"
+      className="rounded border border-gray-300 px-3 py-1 text-xs text-gray-600 hover:border-blue-600 hover:text-blue-600 disabled:opacity-50"
     >
       {loading ? 'Refreshing...' : 'Refresh value'}
     </button>

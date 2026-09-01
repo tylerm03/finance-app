@@ -25,8 +25,8 @@ export default async function CashFlowPage({
 
   if (error) {
     return (
-      <div className="min-h-screen bg-gray-950 p-6 text-gray-100">
-        <p className="rounded border border-red-800 bg-red-950 p-3 text-red-400">
+      <div className="min-h-screen bg-white p-6 text-gray-900">
+        <p className="rounded border border-red-300 bg-red-50 p-3 text-red-600">
           Error loading cash flow: {error.message}
         </p>
       </div>
@@ -64,12 +64,12 @@ export default async function CashFlowPage({
   }
 
   return (
-    <div className="min-h-screen bg-gray-950 p-6 text-gray-100">
+    <div className="min-h-screen bg-white p-6 text-gray-900">
       <div className="mb-6 flex items-center justify-between">
         <div>
-          <p className="mb-1 text-sm text-gray-400">Cash flow</p>
+          <p className="mb-1 text-sm text-gray-500">Cash flow</p>
           <p className="text-4xl font-semibold tabular-nums">${income.toFixed(2)}</p>
-          <p className="text-sm text-gray-400">
+          <p className="text-sm text-gray-500">
             income · ${totalExpenses.toFixed(2)} spent · ${savings.toFixed(2)} saved
           </p>
         </div>
@@ -77,11 +77,11 @@ export default async function CashFlowPage({
       </div>
 
       {links.length === 0 && (
-        <p className="text-gray-400">No income or spending recorded for this month.</p>
+        <p className="text-gray-500">No income or spending recorded for this month.</p>
       )}
 
       {links.length > 0 && (
-        <div className="overflow-x-auto rounded border border-gray-800 bg-gray-900 p-4">
+        <div className="overflow-x-auto rounded border border-gray-200 bg-gray-50 p-4">
           <CashFlowSankey nodes={nodes} links={links} />
         </div>
       )}

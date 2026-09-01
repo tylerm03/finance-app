@@ -42,7 +42,7 @@ export default function AddManualAccount() {
     return (
       <button
         onClick={() => setOpen(true)}
-        className="rounded border border-gray-700 px-4 py-2 text-sm text-gray-300 hover:border-blue-500 hover:text-blue-400"
+        className="rounded border border-gray-300 px-4 py-2 text-sm text-gray-600 hover:border-blue-600 hover:text-blue-600"
       >
         Add manual account
       </button>
@@ -50,20 +50,20 @@ export default function AddManualAccount() {
   }
 
   return (
-    <form onSubmit={handleSubmit} className="flex flex-wrap items-end gap-3 rounded border border-gray-800 bg-gray-900 p-4">
+    <form onSubmit={handleSubmit} className="flex flex-wrap items-end gap-3 rounded border border-gray-200 bg-gray-50 p-4">
       <div>
-        <label className="mb-1 block text-xs text-gray-400">Account name</label>
+        <label className="mb-1 block text-xs text-gray-500">Account name</label>
         <input
           type="text"
           value={name}
           onChange={(e) => setName(e.target.value)}
           placeholder="e.g. Old 401k"
           required
-          className="rounded border border-gray-800 bg-gray-950 px-3 py-2 text-sm text-gray-100"
+          className="rounded border border-gray-200 bg-white px-3 py-2 text-sm text-gray-900"
         />
       </div>
       <div>
-        <label className="mb-1 block text-xs text-gray-400">Current balance</label>
+        <label className="mb-1 block text-xs text-gray-500">Current balance</label>
         <input
           type="number"
           step="0.01"
@@ -71,20 +71,20 @@ export default function AddManualAccount() {
           onChange={(e) => setBalance(e.target.value)}
           placeholder="0.00"
           required
-          className="rounded border border-gray-800 bg-gray-950 px-3 py-2 text-sm text-gray-100"
+          className="rounded border border-gray-200 bg-white px-3 py-2 text-sm text-gray-900"
         />
       </div>
       <button
         type="submit"
         disabled={saving}
-        className="rounded bg-blue-500 px-4 py-2 text-sm font-medium text-white hover:bg-blue-400 disabled:opacity-50"
+        className="rounded bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-600 disabled:opacity-50"
       >
         {saving ? 'Saving...' : 'Save'}
       </button>
       <button
         type="button"
         onClick={() => setOpen(false)}
-        className="rounded px-4 py-2 text-sm text-gray-400 hover:text-gray-100"
+        className="rounded px-4 py-2 text-sm text-gray-500 hover:text-gray-900"
       >
         Cancel
       </button>

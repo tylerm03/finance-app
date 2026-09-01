@@ -20,17 +20,17 @@ export default function DeleteAssetButton({ assetId }: { assetId: string }) {
   if (confirming) {
     return (
       <div className="flex items-center gap-2">
-        <span className="text-xs text-gray-400">Delete?</span>
+        <span className="text-xs text-gray-500">Delete?</span>
         <button
           onClick={handleDelete}
           disabled={deleting}
-          className="rounded border border-red-800 px-2 py-1 text-xs text-red-400 hover:bg-red-950 disabled:opacity-50"
+          className="rounded border border-red-300 px-2 py-1 text-xs text-red-600 hover:bg-red-50 disabled:opacity-50"
         >
           {deleting ? 'Deleting...' : 'Confirm'}
         </button>
         <button
           onClick={() => setConfirming(false)}
-          className="text-xs text-gray-400 hover:text-gray-100"
+          className="text-xs text-gray-500 hover:text-gray-900"
         >
           Cancel
         </button>
@@ -41,7 +41,7 @@ export default function DeleteAssetButton({ assetId }: { assetId: string }) {
   return (
     <button
       onClick={() => setConfirming(true)}
-      className="text-xs text-gray-500 hover:text-red-400"
+      className="text-xs text-gray-500 hover:text-red-600"
     >
       Delete
     </button>

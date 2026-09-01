@@ -16,10 +16,10 @@ type PlaidCategory = {
 } | null
 
 const sourceBadgeStyles: Record<string, string> = {
-  plaid: 'bg-blue-500/20 text-blue-400',
-  rule: 'bg-gray-700 text-gray-300',
-  manual: 'bg-gray-700 text-gray-300',
-  ai: 'bg-purple-500/20 text-purple-400',
+  plaid: 'bg-blue-100 text-blue-600',
+  rule: 'bg-gray-200 text-gray-600',
+  manual: 'bg-gray-200 text-gray-600',
+  ai: 'bg-purple-100 text-purple-600',
 }
 
 export default function TransactionRow({
@@ -38,21 +38,21 @@ export default function TransactionRow({
     plaidCategory?.detailed || t.payment_channel || location?.city || t.website || t.merchant_entity_id
 
   const rowClassName = hasDetail
-    ? 'border-t border-gray-800 cursor-pointer hover:bg-gray-900/50'
-    : 'border-t border-gray-800'
+    ? 'border-t border-gray-200 cursor-pointer hover:bg-gray-50'
+    : 'border-t border-gray-200'
 
   const badgeClassName =
     'rounded-full px-2 py-0.5 text-xs ' +
-    (sourceBadgeStyles[t.category_source] || 'bg-gray-700 text-gray-300')
+    (sourceBadgeStyles[t.category_source] || 'bg-gray-200 text-gray-600')
 
   const amountClassName =
-    'p-3 text-right tabular-nums ' + (t.amount < 0 ? 'text-green-400' : 'text-gray-100')
+    'p-3 text-right tabular-nums ' + (t.amount < 0 ? 'text-green-600' : 'text-gray-900')
 
   return (
     <>
       <tr className={rowClassName} onClick={() => hasDetail && setExpanded(!expanded)}>
-        <td className="p-3 text-gray-400">{t.txn_date}</td>
-        <td className="p-3 text-gray-400">{accountName || '\u2014'}</td>
+        <td className="p-3 text-gray-500">{t.txn_date}</td>
+        <td className="p-3 text-gray-500">{accountName || '\u2014'}</td>
         <td className="p-3">
           <div className="flex items-center gap-2">
             {t.logo_url && (
@@ -60,7 +60,7 @@ export default function TransactionRow({
             )}
             <span>{t.merchant_name || t.description || "Unknown"}</span>
             {t.pending && (
-              <span className="rounded border border-gray-700 px-1.5 py-0.5 text-xs text-gray-400">
+              <span className="rounded border border-gray-300 px-1.5 py-0.5 text-xs text-gray-500">
                 pending
               </span>
             )}
@@ -82,27 +82,27 @@ export default function TransactionRow({
         </td>
       </tr>
       {expanded && (
-        <tr className="border-t border-gray-800 bg-gray-900/30">
+        <tr className="border-t border-gray-200 bg-gray-50">
           <td colSpan={6} className="p-4">
             <div className="grid grid-cols-2 gap-4 sm:grid-cols-3">
               {plaidCategory?.detailed && (
                 <div className="min-w-0">
-                  <p className="text-xs text-gray-400">Detail category</p>
-                  <p className="text-gray-100">
+                  <p className="text-xs text-gray-500">Detail category</p>
+                  <p className="text-gray-900">
                     {plaidCategory.detailed.replaceAll('_', ' ').toLowerCase()}
                   </p>
                 </div>
               )}
               {t.payment_channel && (
                 <div className="min-w-0">
-                  <p className="text-xs text-gray-400">Channel</p>
-                  <p className="text-gray-100">{t.payment_channel.replaceAll('_', ' ')}</p>
+                  <p className="text-xs text-gray-500">Channel</p>
+                  <p className="text-gray-900">{t.payment_channel.replaceAll('_', ' ')}</p>
                 </div>
               )}
               {location?.city && (
                 <div className="min-w-0">
-                  <p className="text-xs text-gray-400">Location</p>
-                  <p className="text-gray-100">
+                  <p className="text-xs text-gray-500">Location</p>
+                  <p className="text-gray-900">
                     {location.city}
                     {location.region ? ', ' + location.region : ''}
                   </p>
@@ -110,21 +110,21 @@ export default function TransactionRow({
               )}
               {plaidCategory?.confidence_level && (
                 <div className="min-w-0">
-                  <p className="text-xs text-gray-400">Confidence</p>
-                  <p className="text-gray-100">
+                  <p className="text-xs text-gray-500">Confidence</p>
+                  <p className="text-gray-900">
                     {plaidCategory.confidence_level.replaceAll('_', ' ').toLowerCase()}
                   </p>
                 </div>
               )}
               {websiteUrl && (
                 <div className="min-w-0">
-                  <p className="text-xs text-gray-400">Website</p>
+                  <p className="text-xs text-gray-500">Website</p>
                   
                     
                     <a href={websiteUrl}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="text-blue-400 hover:underline"
+                    className="text-blue-600 hover:underline"
                   >
                     {t.website}
                   </a>
@@ -132,8 +132,8 @@ export default function TransactionRow({
               )}
               {t.merchant_entity_id && (
                 <div className="min-w-0">
-                  <p className="text-xs text-gray-400">Merchant ID</p>
-                  <p className="truncate text-gray-100">{t.merchant_entity_id}</p>
+                  <p className="text-xs text-gray-500">Merchant ID</p>
+                  <p className="truncate text-gray-900">{t.merchant_entity_id}</p>
                 </div>
               )}
             </div>

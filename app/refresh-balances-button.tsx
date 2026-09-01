@@ -25,11 +25,11 @@ export default function RefreshBalancesButton() {
       <button
         onClick={handleClick}
         disabled={loading}
-        className="rounded border border-blue-500 px-4 py-2 font-medium text-blue-400 hover:bg-blue-500/10 disabled:opacity-50"
+        className="rounded border border-blue-600 px-4 py-2 font-medium text-blue-600 hover:bg-blue-50 disabled:opacity-50"
       >
         {loading ? 'Refreshing...' : 'Refresh account details'}
       </button>
-      {summary && <p className="mt-2 text-sm text-gray-400">{summary}</p>}
+      {summary && <p className="mt-2 text-sm text-gray-500">{summary}</p>}
     </div>
   )
 }

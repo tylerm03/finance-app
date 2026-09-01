@@ -22,8 +22,8 @@ export default async function SavingsPage() {
 
   if (error) {
     return (
-      <div className="min-h-screen bg-gray-950 p-6 text-gray-100">
-        <p className="rounded border border-red-800 bg-red-950 p-3 text-red-400">
+      <div className="min-h-screen bg-white p-6 text-gray-900">
+        <p className="rounded border border-red-300 bg-red-50 p-3 text-red-600">
           Error loading savings: {error.message}
         </p>
       </div>
@@ -51,8 +51,8 @@ export default async function SavingsPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-950 p-6 text-gray-100">
-      <p className="mb-1 text-sm text-gray-400">Total savings & investments</p>
+    <div className="min-h-screen bg-white p-6 text-gray-900">
+      <p className="mb-1 text-sm text-gray-500">Total savings & investments</p>
       <p className="mb-8 text-6xl font-semibold tabular-nums">${total.toFixed(2)}</p>
 
       <div className="mb-6 flex gap-3">
@@ -62,7 +62,7 @@ export default async function SavingsPage() {
       </div>
 
       {(!accounts || accounts.length === 0) && (
-        <p className="text-gray-400">
+        <p className="text-gray-500">
           No savings or investment accounts yet — connect a bank above, then click Sync investments.
         </p>
       )}
@@ -83,13 +83,13 @@ export default async function SavingsPage() {
             }))
 
             return (
-              <div key={account.id} className="overflow-hidden rounded-lg border border-gray-800">
-                <div className="flex items-center justify-between bg-gray-900 p-3">
+              <div key={account.id} className="overflow-hidden rounded-lg border border-gray-200">
+                <div className="flex items-center justify-between bg-gray-50 p-3">
                   <div>
-                    <span className="font-medium text-gray-100">{account.name}</span>
-                    <span className="ml-2 text-xs text-gray-400">{account.subtype}</span>
+                    <span className="font-medium text-gray-900">{account.name}</span>
+                    <span className="ml-2 text-xs text-gray-500">{account.subtype}</span>
                   </div>
-                  <span className="tabular-nums text-gray-100">${accountTotal.toFixed(2)}</span>
+                  <span className="tabular-nums text-gray-900">${accountTotal.toFixed(2)}</span>
                 </div>
 
                 {accountHoldings.length > 0 ? (
@@ -98,7 +98,7 @@ export default async function SavingsPage() {
                     <HoldingsLegend data={chartData} total={accountTotal} />
                   </div>
                 ) : (
-                  <p className="p-3 text-sm text-gray-400">{cashLabel(account.subtype)}</p>
+                  <p className="p-3 text-sm text-gray-500">{cashLabel(account.subtype)}</p>
                 )}
               </div>
             )

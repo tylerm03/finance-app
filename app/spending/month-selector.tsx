@@ -26,7 +26,7 @@ export default function MonthSelector({ selected }: { selected: string }) {
     <select
       value={selected}
       onChange={handleChange}
-      className="rounded border border-gray-800 bg-gray-900 px-3 py-2 text-sm text-gray-100"
+      className="rounded border border-gray-200 bg-gray-50 px-3 py-2 text-sm text-gray-900"
     >
       {options.map((o) => (
         <option key={o.value} value={o.value}>

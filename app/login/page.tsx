@@ -31,12 +31,12 @@ export default function LoginPage() {
   }
 
   return (
-    <div className="flex min-h-screen items-center justify-center bg-gray-950">
+    <div className="flex min-h-screen items-center justify-center bg-white">
       <form
         onSubmit={handleSubmit}
-        className="w-full max-w-sm rounded-lg border border-gray-800 bg-gray-900 p-6"
+        className="w-full max-w-sm rounded-lg border border-gray-200 bg-gray-50 p-6"
       >
-        <h1 className="mb-4 text-lg font-medium text-gray-100">
+        <h1 className="mb-4 text-lg font-medium text-gray-900">
           {mode === 'signup' ? 'Create account' : 'Log in'}
         </h1>
 
@@ -45,7 +45,7 @@ export default function LoginPage() {
           placeholder="Email"
           value={email}
           onChange={(e) => setEmail(e.target.value)}
-          className="mb-3 w-full rounded border border-gray-800 bg-gray-950 p-2 text-gray-100"
+          className="mb-3 w-full rounded border border-gray-200 bg-white p-2 text-gray-900"
           required
         />
         <input
@@ -53,15 +53,15 @@ export default function LoginPage() {
           placeholder="Password"
           value={password}
           onChange={(e) => setPassword(e.target.value)}
-          className="mb-4 w-full rounded border border-gray-800 bg-gray-950 p-2 text-gray-100"
+          className="mb-4 w-full rounded border border-gray-200 bg-white p-2 text-gray-900"
           required
         />
 
-        {error && <p className="mb-3 text-sm text-red-400">{error}</p>}
+        {error && <p className="mb-3 text-sm text-red-600">{error}</p>}
 
         <button
           type="submit"
-          className="w-full rounded bg-blue-500 p-2 font-medium text-white hover:bg-blue-400"
+          className="w-full rounded bg-blue-600 p-2 font-medium text-white hover:bg-blue-600"
         >
           {mode === 'signup' ? 'Sign up' : 'Log in'}
         </button>
@@ -69,7 +69,7 @@ export default function LoginPage() {
         <button
           type="button"
           onClick={() => setMode(mode === 'signup' ? 'login' : 'signup')}
-          className="mt-3 text-sm text-blue-400"
+          className="mt-3 text-sm text-blue-600"
         >
           {mode === 'signup' ? 'Already have an account? Log in' : "Need an account? Sign up"}
         </button>

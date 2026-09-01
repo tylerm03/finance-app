@@ -19,7 +19,7 @@ function CustomNode(props: any) {
         x={isOut ? x - 6 : x + width + 6}
         y={y + height / 2}
         fontSize={12}
-        fill="#f5f5f5"
+        fill="#111827"
         dominantBaseline="middle"
       >
         {payload.name}
@@ -35,16 +35,16 @@ export default function CashFlowSankey({ nodes, links }: { nodes: Node[]; links:
       height={Math.max(320, nodes.length * 32)}
       data={{ nodes, links }}
       node={<CustomNode />}
-      link={{ stroke: '#3b82f6', strokeOpacity: 0.25 }}
+      link={{ stroke: '#3b82f6', strokeOpacity: 0.2 }}
       nodePadding={24}
       margin={{ left: 100, right: 140, top: 20, bottom: 20 }}
     >
       <Tooltip
         contentStyle={{
-          backgroundColor: '#171717',
-          border: '1px solid #262626',
+          backgroundColor: '#ffffff',
+          border: '1px solid #e5e7eb',
           borderRadius: '6px',
-          color: '#f5f5f5',
+          color: '#111827',
         }}
         formatter={(value: any) => '$' + Number(value).toFixed(2)}
       />

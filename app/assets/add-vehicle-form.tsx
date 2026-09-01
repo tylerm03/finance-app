@@ -87,7 +87,7 @@ export default function AddVehicleForm() {
     return (
       <button
         onClick={() => setOpen(true)}
-        className="rounded bg-blue-500 px-4 py-2 font-medium text-white hover:bg-blue-400"
+        className="rounded bg-blue-600 px-4 py-2 font-medium text-white hover:bg-blue-600"
       >
         Add a vehicle
       </button>
@@ -95,43 +95,43 @@ export default function AddVehicleForm() {
   }
 
   return (
-    <form onSubmit={handleSubmit} className="flex flex-wrap items-end gap-3 rounded border border-gray-800 bg-gray-900 p-4">
+    <form onSubmit={handleSubmit} className="flex flex-wrap items-end gap-3 rounded border border-gray-200 bg-gray-50 p-4">
       <div>
-        <label className="mb-1 block text-xs text-gray-400">VIN</label>
+        <label className="mb-1 block text-xs text-gray-500">VIN</label>
         <input
           type="text"
           value={vin}
           onChange={(e) => setVin(e.target.value)}
           placeholder="1HGBH41JXMN109186"
           required
-          className="w-48 rounded border border-gray-800 bg-gray-950 px-3 py-2 text-sm text-gray-100"
+          className="w-48 rounded border border-gray-200 bg-white px-3 py-2 text-sm text-gray-900"
         />
       </div>
       <div>
-        <label className="mb-1 block text-xs text-gray-400">Mileage (optional)</label>
+        <label className="mb-1 block text-xs text-gray-500">Mileage (optional)</label>
         <input
           type="number"
           value={mileage}
           onChange={(e) => setMileage(e.target.value)}
           placeholder="45000"
-          className="w-28 rounded border border-gray-800 bg-gray-950 px-3 py-2 text-sm text-gray-100"
+          className="w-28 rounded border border-gray-200 bg-white px-3 py-2 text-sm text-gray-900"
         />
       </div>
       <button
         type="submit"
         disabled={saving}
-        className="rounded bg-blue-500 px-4 py-2 text-sm font-medium text-white hover:bg-blue-400 disabled:opacity-50"
+        className="rounded bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-600 disabled:opacity-50"
       >
         {saving ? 'Decoding VIN...' : 'Save'}
       </button>
       <button
         type="button"
         onClick={() => setOpen(false)}
-        className="rounded px-4 py-2 text-sm text-gray-400 hover:text-gray-100"
+        className="rounded px-4 py-2 text-sm text-gray-500 hover:text-gray-900"
       >
         Cancel
       </button>
-      {error && <p className="w-full text-sm text-red-400">{error}</p>}
+      {error && <p className="w-full text-sm text-red-600">{error}</p>}
     </form>
   )
 }

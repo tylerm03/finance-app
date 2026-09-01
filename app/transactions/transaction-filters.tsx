@@ -40,13 +40,13 @@ export default function TransactionFilters({ accounts }: { accounts: Account[] }
         value={searchText}
         onChange={(e) => setSearchText(e.target.value)}
         placeholder="Search transactions..."
-        className="rounded border border-gray-800 bg-gray-900 px-3 py-2 text-sm text-gray-100 placeholder-gray-500"
+        className="rounded border border-gray-200 bg-gray-50 px-3 py-2 text-sm text-gray-900 placeholder-gray-400"
       />
 
       <select
         value={searchParams.get('category') || ''}
         onChange={(e) => updateParam('category', e.target.value)}
-        className="rounded border border-gray-800 bg-gray-900 px-3 py-2 text-sm text-gray-100"
+        className="rounded border border-gray-200 bg-gray-50 px-3 py-2 text-sm text-gray-900"
       >
         <option value="">All categories</option>
         <option value="__uncategorized__">Uncategorized</option>
@@ -60,7 +60,7 @@ export default function TransactionFilters({ accounts }: { accounts: Account[] }
       <select
         value={searchParams.get('account') || ''}
         onChange={(e) => updateParam('account', e.target.value)}
-        className="rounded border border-gray-800 bg-gray-900 px-3 py-2 text-sm text-gray-100"
+        className="rounded border border-gray-200 bg-gray-50 px-3 py-2 text-sm text-gray-900"
       >
         <option value="">All accounts</option>
         {accounts.map((a) => (

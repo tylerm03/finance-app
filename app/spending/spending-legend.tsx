@@ -20,13 +20,13 @@ export default function SpendingLegend({
                 className="h-2.5 w-2.5 rounded-full"
                 style={{ backgroundColor: CHART_COLORS[i % CHART_COLORS.length] }}
               />
-              <span className={d.category === 'Other' ? 'text-red-400' : 'text-gray-100'}>
+              <span className={d.category === 'Other' ? 'text-red-600' : 'text-gray-900'}>
                 {d.category}
               </span>
             </div>
             <div className="flex items-center gap-3">
-              <span className="text-gray-400">{pct.toFixed(0)}%</span>
-              <span className="tabular-nums text-gray-100">${d.amount.toFixed(2)}</span>
+              <span className="text-gray-500">{pct.toFixed(0)}%</span>
+              <span className="tabular-nums text-gray-900">${d.amount.toFixed(2)}</span>
             </div>
           </div>
         )

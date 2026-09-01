@@ -59,26 +59,26 @@ export default async function Home() {
   const onTrack = spentLastMonth === 0 || paceDiff <= expectedPaceAmount * 0.1
 
   return (
-    <div className="min-h-screen bg-gray-950 p-6 text-gray-100">
+    <div className="min-h-screen bg-white p-6 text-gray-900">
       <div className="mb-8 grid grid-cols-1 gap-6 sm:grid-cols-2">
         <div>
-          <p className="mb-1 text-sm text-gray-400">Spent this month</p>
+          <p className="mb-1 text-sm text-gray-500">Spent this month</p>
           <p className="text-5xl font-semibold tabular-nums">
             ${spentThisMonth.toFixed(2)}
           </p>
         </div>
         <div>
-          <p className="mb-1 text-sm text-gray-400">Net worth</p>
-          <p className="text-5xl font-semibold tabular-nums text-blue-400">
+          <p className="mb-1 text-sm text-gray-500">Net worth</p>
+          <p className="text-5xl font-semibold tabular-nums text-blue-600">
             ${netWorth.toFixed(2)}
           </p>
         </div>
       </div>
 
       <div className="mb-8 grid grid-cols-1 gap-4 sm:grid-cols-3">
-        <div className="rounded border border-gray-800 bg-gray-900 p-4">
-          <p className="mb-1 text-sm text-gray-400">Pace</p>
-          <p className={`text-lg font-medium ${onTrack ? 'text-blue-400' : 'text-red-400'}`}>
+        <div className="rounded border border-gray-200 bg-gray-50 p-4">
+          <p className="mb-1 text-sm text-gray-500">Pace</p>
+          <p className={`text-lg font-medium ${onTrack ? 'text-blue-600' : 'text-red-600'}`}>
             {spentLastMonth === 0
               ? 'Not enough history yet'
               : onTrack
@@ -87,13 +87,13 @@ export default async function Home() {
           </p>
         </div>
 
-        <div className="rounded border border-gray-800 bg-gray-900 p-4">
-          <p className="mb-1 text-sm text-gray-400">Coming up</p>
-          {upcoming.length === 0 && <p className="text-gray-100">Nothing due soon</p>}
+        <div className="rounded border border-gray-200 bg-gray-50 p-4">
+          <p className="mb-1 text-sm text-gray-500">Coming up</p>
+          {upcoming.length === 0 && <p className="text-gray-900">Nothing due soon</p>}
           {upcoming.map((o) => (
-            <p key={o.id} className="text-sm text-gray-100">
+            <p key={o.id} className="text-sm text-gray-900">
               {o.name} — ${Number(o.expected_amount).toFixed(2)}{' '}
-              <span className="text-gray-400">({o.next_due_date || 'date unknown'})</span>
+              <span className="text-gray-500">({o.next_due_date || 'date unknown'})</span>
             </p>
           ))}
         </div>
@@ -102,12 +102,12 @@ export default async function Home() {
           href="/transactions?category=__uncategorized__"
           className={`rounded border p-4 ${
             uncategorizedCount > 0
-              ? 'border-red-800 bg-red-950'
-              : 'border-gray-800 bg-gray-900'
+              ? 'border-red-300 bg-red-50'
+              : 'border-gray-200 bg-gray-50'
           }`}
         >
-          <p className="mb-1 text-sm text-gray-400">Uncategorized</p>
-          <p className={`text-lg font-medium ${uncategorizedCount > 0 ? 'text-red-400' : 'text-gray-100'}`}>
+          <p className="mb-1 text-sm text-gray-500">Uncategorized</p>
+          <p className={`text-lg font-medium ${uncategorizedCount > 0 ? 'text-red-600' : 'text-gray-900'}`}>
             {uncategorizedCount === 0 ? 'All caught up' : `${uncategorizedCount} to review`}
           </p>
         </Link>

@@ -54,11 +54,11 @@ export default function ConnectBankButton() {
     <div>
       <button
         onClick={handleClick}
-        className="rounded bg-blue-500 px-4 py-2 font-medium text-white hover:bg-blue-400"
+        className="rounded bg-blue-600 px-4 py-2 font-medium text-white hover:bg-blue-600"
       >
         Connect a bank
       </button>
-      {error && <p className="mt-2 text-sm text-red-400">{error}</p>}
+      {error && <p className="mt-2 text-sm text-red-600">{error}</p>}
     </div>
   )
 }

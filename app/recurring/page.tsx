@@ -12,20 +12,20 @@ export default async function RecurringPage() {
     .order('next_due_date', { ascending: true })
 
   return (
-    <div className="min-h-screen bg-gray-950 p-6 text-gray-100">
+    <div className="min-h-screen bg-white p-6 text-gray-900">
       <h1 className="mb-6 text-xl font-medium">Recurring</h1>
       <div className="mb-6">
         <RefreshRecurringButton />
       </div>
 
       {error && (
-        <p className="rounded border border-red-800 bg-red-950 p-3 text-red-400">
+        <p className="rounded border border-red-300 bg-red-50 p-3 text-red-600">
           Error loading recurring: {error.message}
         </p>
       )}
 
       {!error && obligations?.length === 0 && (
-        <p className="text-gray-400">
+        <p className="text-gray-500">
           Nothing detected yet — click Refresh recurring above.
         </p>
       )}
@@ -35,16 +35,16 @@ export default async function RecurringPage() {
           {obligations.map((o) => (
             <div
               key={o.id}
-              className="flex items-center justify-between rounded border border-gray-800 bg-gray-900 p-3"
+              className="flex items-center justify-between rounded border border-gray-200 bg-gray-50 p-3"
             >
               <div>
-                <p className="text-gray-100">{o.name}</p>
-                <p className="text-sm text-gray-400">
+                <p className="text-gray-900">{o.name}</p>
+                <p className="text-sm text-gray-500">
                   {o.cadence} · due {o.next_due_date || 'unknown'}
                 </p>
               </div>
               <div className="flex items-center gap-3">
-                <span className="tabular-nums text-gray-100">
+                <span className="tabular-nums text-gray-900">
                   ${Number(o.expected_amount).toFixed(2)}
                 </span>
                 <StatusBadge status={o.status} />
@@ -60,9 +60,9 @@ export default async function RecurringPage() {
 
 function StatusBadge({ status }: { status: string }) {
   const styles: Record<string, string> = {
-    estimated: 'text-gray-400 border-gray-700',
-    marked_paid: 'text-blue-400 border-blue-800',
-    cleared: 'text-green-400 border-green-800',
+    estimated: 'text-gray-500 border-gray-300',
+    marked_paid: 'text-blue-600 border-blue-300',
+    cleared: 'text-green-600 border-green-300',
   }
   return (
     <span className={`rounded border px-2 py-0.5 text-xs ${styles[status] || styles.estimated}`}>

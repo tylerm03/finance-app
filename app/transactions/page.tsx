@@ -64,9 +64,9 @@ export default async function TransactionsPage({
   const { data: transactions, error } = await query
 
   return (
-    <div className="min-h-screen bg-gray-950 p-6 text-gray-100">
+    <div className="min-h-screen bg-white p-6 text-gray-900">
       {chartData.length > 0 && (
-        <div className="mb-6 grid grid-cols-1 gap-4 rounded border border-gray-800 bg-gray-900 p-4 sm:grid-cols-2">
+        <div className="mb-6 grid grid-cols-1 gap-4 rounded border border-gray-200 bg-gray-50 p-4 sm:grid-cols-2">
           <SpendingPieChart data={chartData} />
           <SpendingLegend data={chartData} total={chartTotal} />
         </div>
@@ -85,19 +85,19 @@ export default async function TransactionsPage({
       </div>
 
       {error && (
-        <p className="rounded border border-red-800 bg-red-950 p-3 text-red-400">
+        <p className="rounded border border-red-300 bg-red-50 p-3 text-red-600">
           Error loading transactions: {error.message}
         </p>
       )}
 
       {!error && transactions?.length === 0 && (
-        <p className="text-gray-400">No transactions match these filters.</p>
+        <p className="text-gray-500">No transactions match these filters.</p>
       )}
 
       {!error && transactions && transactions.length > 0 && (
-        <div className="overflow-hidden rounded-lg border border-gray-800">
+        <div className="overflow-hidden rounded-lg border border-gray-200">
           <table className="w-full text-sm">
-            <thead className="bg-gray-900 text-gray-400">
+            <thead className="bg-gray-50 text-gray-500">
               <tr>
                 <th className="p-3 text-left">Date</th>
                 <th className="p-3 text-left">Account</th>

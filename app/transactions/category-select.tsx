@@ -59,10 +59,10 @@ export default function CategorySelect({
       value={currentCategory || ''}
       onChange={handleChange}
       disabled={saving}
-      className={`rounded border bg-gray-950 px-2 py-1 text-sm ${
+      className={`rounded border bg-white px-2 py-1 text-sm ${
         currentCategory
-          ? 'border-gray-800 text-gray-100'
-          : 'border-red-800 text-red-400'
+          ? 'border-gray-200 text-gray-900'
+          : 'border-red-300 text-red-600'
       }`}
     >
       <option value="" disabled>

@@ -1,7 +1,6 @@
 'use client'
 
 import { PieChart, Pie, Cell, Tooltip, ResponsiveContainer } from 'recharts'
-
 import { CHART_COLORS } from '@/lib/categorization/chart-colors'
 
 type Slice = { category: string; amount: number }
@@ -21,15 +20,15 @@ export default function SpendingPieChart({ data }: { data: Slice[] }) {
           paddingAngle={1}
         >
           {data.map((_, i) => (
-            <Cell key={i} fill={CHART_COLORS[i % CHART_COLORS.length]} stroke="#0a0a0b" />
+            <Cell key={i} fill={CHART_COLORS[i % CHART_COLORS.length]} stroke="#ffffff" />
           ))}
         </Pie>
         <Tooltip
           contentStyle={{
-            backgroundColor: '#171717',
-            border: '1px solid #262626',
+            backgroundColor: '#ffffff',
+            border: '1px solid #e5e7eb',
             borderRadius: '6px',
-            color: '#f5f5f5',
+            color: '#111827',
           }}
           formatter={(value: any) => '$' + Number(value).toFixed(2)}
         />

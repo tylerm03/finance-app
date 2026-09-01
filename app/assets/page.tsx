@@ -13,8 +13,8 @@ export default async function AssetsPage() {
 
   if (error) {
     return (
-      <div className="min-h-screen bg-gray-950 p-6 text-gray-100">
-        <p className="rounded border border-red-800 bg-red-950 p-3 text-red-400">
+      <div className="min-h-screen bg-white p-6 text-gray-900">
+        <p className="rounded border border-red-300 bg-red-50 p-3 text-red-600">
           Error loading assets: {error.message}
         </p>
       </div>
@@ -24,8 +24,8 @@ export default async function AssetsPage() {
   const total = (assets || []).reduce((sum, a) => sum + Number(a.current_value || 0), 0)
 
   return (
-    <div className="min-h-screen bg-gray-950 p-6 text-gray-100">
-      <p className="mb-1 text-sm text-gray-400">Total assets</p>
+    <div className="min-h-screen bg-white p-6 text-gray-900">
+      <p className="mb-1 text-sm text-gray-500">Total assets</p>
       <p className="mb-8 text-6xl font-semibold tabular-nums">${total.toFixed(2)}</p>
 
       <div className="mb-6">
@@ -33,19 +33,19 @@ export default async function AssetsPage() {
       </div>
 
       {(!assets || assets.length === 0) && (
-        <p className="text-gray-400">No assets yet — add a vehicle above.</p>
+        <p className="text-gray-500">No assets yet — add a vehicle above.</p>
       )}
 
       {assets && assets.length > 0 && (
         <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
           {assets.map((asset) => (
-            <div key={asset.id} className="rounded-lg border border-gray-800 bg-gray-900 p-4">
+            <div key={asset.id} className="rounded-lg border border-gray-200 bg-gray-50 p-4">
               <div className="mb-2 flex items-start justify-between">
                 <div>
-                  <p className="font-medium text-gray-100">{asset.name}</p>
-                  {asset.trim && <p className="text-xs text-gray-400">{asset.trim}</p>}
+                  <p className="font-medium text-gray-900">{asset.name}</p>
+                  {asset.trim && <p className="text-xs text-gray-500">{asset.trim}</p>}
                   {asset.mileage && (
-                    <p className="text-xs text-gray-400">{asset.mileage.toLocaleString()} miles</p>
+                    <p className="text-xs text-gray-500">{asset.mileage.toLocaleString()} miles</p>
                   )}
                 </div>
                 <RefreshValueButton
@@ -58,7 +58,7 @@ export default async function AssetsPage() {
                   mileage={asset.mileage}
                 />
               </div>
-              <p className="text-3xl font-semibold tabular-nums text-gray-100">
+              <p className="text-3xl font-semibold tabular-nums text-gray-900">
                 {asset.current_value ? '$' + Number(asset.current_value).toFixed(2) : '—'}
               </p>
               {asset.value_updated_at && (
@@ -66,7 +66,7 @@ export default async function AssetsPage() {
                   Updated {new Date(asset.value_updated_at).toLocaleDateString()}
                 </p>
               )}
-              <div className="mt-3 border-t border-gray-800 pt-3">
+              <div className="mt-3 border-t border-gray-200 pt-3">
                 <DeleteAssetButton assetId={asset.id} />
               </div>
             </div>
