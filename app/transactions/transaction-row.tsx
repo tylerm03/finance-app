@@ -16,7 +16,7 @@ type PlaidCategory = {
 } | null
 
 const sourceBadgeStyles: Record<string, string> = {
-  plaid: 'bg-blue-100 text-blue-600',
+  plaid: 'bg-orange-100 text-orange-600',
   rule: 'bg-gray-200 text-gray-600',
   manual: 'bg-gray-200 text-gray-600',
   ai: 'bg-purple-100 text-purple-600',
@@ -124,7 +124,7 @@ export default function TransactionRow({
                     <a href={websiteUrl}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="text-blue-600 hover:underline"
+                    className="text-orange-600 hover:underline"
                   >
                     {t.website}
                   </a>

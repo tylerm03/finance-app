@@ -42,7 +42,7 @@ export default function AddManualAccount() {
     return (
       <button
         onClick={() => setOpen(true)}
-        className="rounded border border-gray-300 px-4 py-2 text-sm text-gray-600 hover:border-blue-600 hover:text-blue-600"
+        className="rounded border border-gray-300 px-4 py-2 text-sm text-gray-600 hover:border-orange-600 hover:text-orange-600"
       >
         Add manual account
       </button>
@@ -77,7 +77,7 @@ export default function AddManualAccount() {
       <button
         type="submit"
         disabled={saving}
-        className="rounded bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-600 disabled:opacity-50"
+        className="rounded bg-orange-600 px-4 py-2 text-sm font-medium text-white hover:bg-orange-600 disabled:opacity-50"
       >
         {saving ? 'Saving...' : 'Save'}
       </button>

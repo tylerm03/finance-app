@@ -33,7 +33,7 @@ export default function RefreshRecurringButton() {
       <button
         onClick={handleClick}
         disabled={loading}
-        className="rounded border border-blue-600 px-4 py-2 font-medium text-blue-600 hover:bg-blue-50 disabled:opacity-50"
+        className="rounded border border-orange-600 px-4 py-2 font-medium text-orange-600 hover:bg-orange-50 disabled:opacity-50"
       >
         {loading ? 'Refreshing...' : 'Refresh recurring'}
       </button>

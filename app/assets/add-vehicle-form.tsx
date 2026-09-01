@@ -87,7 +87,7 @@ export default function AddVehicleForm() {
     return (
       <button
         onClick={() => setOpen(true)}
-        className="rounded bg-blue-600 px-4 py-2 font-medium text-white hover:bg-blue-600"
+        className="rounded bg-orange-600 px-4 py-2 font-medium text-white hover:bg-orange-600"
       >
         Add a vehicle
       </button>
@@ -120,7 +120,7 @@ export default function AddVehicleForm() {
       <button
         type="submit"
         disabled={saving}
-        className="rounded bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-600 disabled:opacity-50"
+        className="rounded bg-orange-600 px-4 py-2 text-sm font-medium text-white hover:bg-orange-600 disabled:opacity-50"
       >
         {saving ? 'Decoding VIN...' : 'Save'}
       </button>

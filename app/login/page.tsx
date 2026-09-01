@@ -61,7 +61,7 @@ export default function LoginPage() {
 
         <button
           type="submit"
-          className="w-full rounded bg-blue-600 p-2 font-medium text-white hover:bg-blue-600"
+          className="w-full rounded bg-orange-600 p-2 font-medium text-white hover:bg-orange-600"
         >
           {mode === 'signup' ? 'Sign up' : 'Log in'}
         </button>
@@ -69,7 +69,7 @@ export default function LoginPage() {
         <button
           type="button"
           onClick={() => setMode(mode === 'signup' ? 'login' : 'signup')}
-          className="mt-3 text-sm text-blue-600"
+          className="mt-3 text-sm text-orange-600"
         >
           {mode === 'signup' ? 'Already have an account? Log in' : "Need an account? Sign up"}
         </button>

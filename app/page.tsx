@@ -69,7 +69,7 @@ export default async function Home() {
         </div>
         <div>
           <p className="mb-1 text-sm text-gray-500">Net worth</p>
-          <p className="text-5xl font-semibold tabular-nums text-blue-600">
+          <p className="text-5xl font-semibold tabular-nums text-orange-600">
             ${netWorth.toFixed(2)}
           </p>
         </div>
@@ -78,7 +78,7 @@ export default async function Home() {
       <div className="mb-8 grid grid-cols-1 gap-4 sm:grid-cols-3">
         <div className="rounded border border-gray-200 bg-gray-50 p-4">
           <p className="mb-1 text-sm text-gray-500">Pace</p>
-          <p className={`text-lg font-medium ${onTrack ? 'text-blue-600' : 'text-red-600'}`}>
+          <p className={`text-lg font-medium ${onTrack ? 'text-orange-600' : 'text-red-600'}`}>
             {spentLastMonth === 0
               ? 'Not enough history yet'
               : onTrack
