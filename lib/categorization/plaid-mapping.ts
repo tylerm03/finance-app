@@ -1,5 +1,4 @@
 // Maps Plaid's primary personal_finance_category to our own taxonomy.
-// Plaid's full list has ~16 primary categories; this covers all of them.
 export const plaidCategoryMap: Record<string, string> = {
   INCOME: 'Income',
   TRANSFER_IN: 'Income',
@@ -19,8 +18,13 @@ export const plaidCategoryMap: Record<string, string> = {
   RENT_AND_UTILITIES: 'Utilities',
 }
 
-// Plaid's detailed sub-category catches things the primary category
-// blurs together — this overrides the primary mapping when matched.
+// Detailed sub-category overrides — these win over the primary mapping.
+// Only credit card payments specifically get isolated as "Transfer"
+// (excluded from spend/income totals) — that's the one Plaid category
+// that always represents paying down a balance you already spent on
+// the card, never a new expense or real income. Generic transfers
+// (savings contributions, moving money between your own accounts)
+// keep their normal categorization rather than being lumped in.
 export const plaidDetailedOverrides: Record<string, string> = {
   FOOD_AND_DRINK_GROCERIES: 'Groceries',
   FOOD_AND_DRINK_COFFEE: 'Dining',
@@ -29,6 +33,7 @@ export const plaidDetailedOverrides: Record<string, string> = {
   ENTERTAINMENT_TV_AND_MOVIES: 'Subscriptions',
   ENTERTAINMENT_MUSIC_AND_AUDIO: 'Subscriptions',
   RENT_AND_UTILITIES_RENT: 'Rent',
+  LOAN_PAYMENTS_CREDIT_CARD_PAYMENT: 'Transfer',
 }
 
 export function mapPlaidCategory(plaidCategory: {
