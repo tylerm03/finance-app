@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
-import Link from "next/link";
+import Sidebar from "./sidebar";
 import "./globals.css";
 
 const geistSans = Geist({
@@ -24,30 +24,9 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
       lang="en"
       className={`${geistSans.variable} ${geistMono.variable} h-full antialiased`}
     >
-      <body className="min-h-full flex flex-col bg-white">
-        <nav className="border-b border-gray-200 bg-gray-50 px-6 py-3">
-          <div className="flex gap-6 text-sm">
-            <Link href="/" className="text-gray-900 hover:text-blue-600">
-              Home
-            </Link>
-            <Link href="/transactions" className="text-gray-900 hover:text-blue-600">
-              Transactions
-            </Link>
-            <Link href="/spending" className="text-gray-900 hover:text-blue-600">
-              Cash Flow
-            </Link>
-            <Link href="/recurring" className="text-gray-900 hover:text-blue-600">
-              Recurring
-            </Link>
-            <Link href="/savings" className="text-gray-900 hover:text-blue-600">
-              Savings
-            </Link>
-            <Link href="/assets" className="text-gray-900 hover:text-blue-600">
-              Assets
-            </Link>
-          </div>
-        </nav>
-        {children}
+      <body className="flex h-full bg-white">
+        <Sidebar />
+        <main className="flex-1 overflow-y-auto">{children}</main>
       </body>
     </html>
   );
