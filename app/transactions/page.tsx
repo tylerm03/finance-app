@@ -32,6 +32,7 @@ export default async function TransactionsPage({
 
   const totals = new Map<string, number>()
   for (const t of monthTxns || []) {
+    if (t.category === 'Transfer') continue
     const cat = t.category || 'Other'
     totals.set(cat, (totals.get(cat) || 0) + Number(t.amount))
   }
