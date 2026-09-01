@@ -61,7 +61,7 @@ export default async function RecurringPage() {
 function StatusBadge({ status }: { status: string }) {
   const styles: Record<string, string> = {
     estimated: 'text-gray-500 border-gray-300',
-    marked_paid: 'text-orange-600 border-orange-300',
+    marked_paid: 'text-orange-500 border-orange-300',
     cleared: 'text-green-600 border-green-300',
   }
   return (

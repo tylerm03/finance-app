@@ -35,7 +35,7 @@ export default function SyncInvestmentsButton() {
       <button
         onClick={handleClick}
         disabled={loading}
-        className="rounded border border-orange-600 px-4 py-2 font-medium text-orange-600 hover:bg-orange-50 disabled:opacity-50"
+        className="rounded border border-orange-500 px-4 py-2 font-medium text-orange-500 hover:bg-orange-50 disabled:opacity-50"
       >
         {loading ? 'Syncing...' : 'Sync investments'}
       </button>

@@ -18,7 +18,7 @@ export default function MarkPaidButton({ id }: { id: string }) {
   return (
     <button
       onClick={handleClick}
-      className="rounded border border-gray-300 px-2 py-1 text-xs text-gray-600 hover:border-orange-600 hover:text-orange-600"
+      className="rounded border border-gray-300 px-2 py-1 text-xs text-gray-600 hover:border-orange-500 hover:text-orange-500"
     >
       Mark paid
     </button>
