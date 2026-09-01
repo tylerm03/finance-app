@@ -5,6 +5,8 @@ import CategorizeButton from '../categorize-button'
 import RefreshBalancesButton from '../refresh-balances-button'
 import TransactionRow from './transaction-row'
 import TransactionFilters from './transaction-filters'
+import SpendingPieChart from '../spending/spending-pie-chart'
+import SpendingLegend from '../spending/spending-legend'
 
 export default async function TransactionsPage({
   searchParams,
@@ -18,6 +20,24 @@ export default async function TransactionsPage({
     .from('accounts')
     .select('id, name')
     .order('name')
+
+  // This month's spending, for the chart at the top of the page
+  const now = new Date()
+  const monthStart = new Date(now.getFullYear(), now.getMonth(), 1).toISOString().split('T')[0]
+  const { data: monthTxns } = await supabase
+    .from('transactions')
+    .select('category, amount')
+    .gte('txn_date', monthStart)
+    .gt('amount', 0)
+
+  const totals = new Map<string, number>()
+  for (const t of monthTxns || []) {
+    const cat = t.category || 'Other'
+    totals.set(cat, (totals.get(cat) || 0) + Number(t.amount))
+  }
+  const sorted = [...totals.entries()].sort((a, b) => b[1] - a[1])
+  const chartTotal = sorted.reduce((sum, [, amt]) => sum + amt, 0)
+  const chartData = sorted.map(([cat, amount]) => ({ category: cat, amount }))
 
   let query = supabase
     .from('transactions')
@@ -45,6 +65,13 @@ export default async function TransactionsPage({
 
   return (
     <div className="min-h-screen bg-gray-950 p-6 text-gray-100">
+      {chartData.length > 0 && (
+        <div className="mb-6 grid grid-cols-1 gap-4 rounded border border-gray-800 bg-gray-900 p-4 sm:grid-cols-2">
+          <SpendingPieChart data={chartData} />
+          <SpendingLegend data={chartData} total={chartTotal} />
+        </div>
+      )}
+
       <div className="mb-6 flex flex-wrap items-center justify-between gap-3">
         <h1 className="text-xl font-medium">Transactions</h1>
         <TransactionFilters accounts={accounts || []} />

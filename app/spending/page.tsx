@@ -1,9 +1,8 @@
 import { createClient } from '@/lib/supabase/server'
 import MonthSelector from './month-selector'
-import SpendingPieChart from './spending-pie-chart'
-import SpendingLegend from './spending-legend'
+import CashFlowSankey from './cash-flow-sankey'
 
-export default async function SpendingPage({
+export default async function CashFlowPage({
   searchParams,
 }: {
   searchParams: Promise<{ month?: string }>
@@ -23,54 +22,67 @@ export default async function SpendingPage({
     .select('category, amount')
     .gte('txn_date', rangeStart)
     .lte('txn_date', rangeEnd)
-    .gt('amount', 0)
 
   if (error) {
     return (
       <div className="min-h-screen bg-gray-950 p-6 text-gray-100">
         <p className="rounded border border-red-800 bg-red-950 p-3 text-red-400">
-          Error loading spending: {error.message}
+          Error loading cash flow: {error.message}
         </p>
       </div>
     )
   }
 
-  const totals = new Map<string, number>()
+  // Income = negative amounts (our sign convention), flipped positive
+  const income = (transactions || [])
+    .filter((t) => t.amount < 0)
+    .reduce((sum, t) => sum + Math.abs(Number(t.amount)), 0)
+
+  const expensesByCategory = new Map<string, number>()
   for (const t of transactions || []) {
+    if (t.amount <= 0) continue
     const cat = t.category || 'Other'
-    totals.set(cat, (totals.get(cat) || 0) + Number(t.amount))
+    expensesByCategory.set(cat, (expensesByCategory.get(cat) || 0) + Number(t.amount))
   }
 
-  const sorted = [...totals.entries()].sort((a, b) => b[1] - a[1])
-  const grandTotal = sorted.reduce((sum, [, amt]) => sum + amt, 0)
-  const otherTotal = totals.get('Other') || 0
-  const otherPct = grandTotal > 0 ? (otherTotal / grandTotal) * 100 : 0
-  const chartData = sorted.map(([category, amount]) => ({ category, amount }))
+  const totalExpenses = [...expensesByCategory.values()].reduce((s, v) => s + v, 0)
+  const savings = Math.max(income - totalExpenses, 0)
+
+  // Build Sankey nodes/links: Income -> Savings, Income -> each category
+  const nodes = [{ name: 'Income' }]
+  const links: { source: number; target: number; value: number }[] = []
+
+  if (savings > 0) {
+    nodes.push({ name: 'Savings' })
+    links.push({ source: 0, target: nodes.length - 1, value: savings })
+  }
+
+  const sortedCategories = [...expensesByCategory.entries()].sort((a, b) => b[1] - a[1])
+  for (const [cat, amount] of sortedCategories) {
+    nodes.push({ name: cat })
+    links.push({ source: 0, target: nodes.length - 1, value: amount })
+  }
 
   return (
     <div className="min-h-screen bg-gray-950 p-6 text-gray-100">
       <div className="mb-6 flex items-center justify-between">
         <div>
-          <p className="mb-1 text-sm text-gray-400">Spending</p>
-          <p className="text-4xl font-semibold tabular-nums">${grandTotal.toFixed(2)}</p>
+          <p className="mb-1 text-sm text-gray-400">Cash flow</p>
+          <p className="text-4xl font-semibold tabular-nums">${income.toFixed(2)}</p>
+          <p className="text-sm text-gray-400">
+            income · ${totalExpenses.toFixed(2)} spent · ${savings.toFixed(2)} saved
+          </p>
         </div>
         <MonthSelector selected={selectedMonth} />
       </div>
 
-      {otherPct > 15 && (
-        <p className="mb-4 rounded border border-red-800 bg-red-950 p-2 text-sm text-red-400">
-          {otherPct.toFixed(0)}% of spending is uncategorized — check the Other bucket.
-        </p>
+      {links.length === 0 && (
+        <p className="text-gray-400">No income or spending recorded for this month.</p>
       )}
 
-      {sorted.length === 0 && (
-        <p className="text-gray-400">No spending recorded for this month.</p>
-      )}
-
-      {sorted.length > 0 && (
-        <div className="grid grid-cols-1 gap-6 rounded border border-gray-800 bg-gray-900 p-4 sm:grid-cols-2">
-          <SpendingPieChart data={chartData} />
-          <SpendingLegend data={chartData} total={grandTotal} />
+      {links.length > 0 && (
+        <div className="overflow-x-auto rounded border border-gray-800 bg-gray-900 p-4">
+          <CashFlowSankey nodes={nodes} links={links} />
         </div>
       )}
     </div>

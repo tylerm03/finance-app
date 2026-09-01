@@ -34,7 +34,7 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
               Transactions
             </Link>
             <Link href="/spending" className="text-gray-100 hover:text-blue-400">
-              Spending
+              Cash Flow
             </Link>
             <Link href="/recurring" className="text-gray-100 hover:text-blue-400">
               Recurring
