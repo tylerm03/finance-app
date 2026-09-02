@@ -52,7 +52,7 @@ export async function POST() {
     }
 
     const mapped = mapPlaidCategory(t.plaid_category as any)
-    if (mapped !== 'Other') {
+    if (mapped !== 'OTHER_EXPENSE') {
       await supabase
         .from('transactions')
         .update({ category: mapped, category_source: 'plaid' })
