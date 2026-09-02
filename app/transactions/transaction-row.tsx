@@ -2,6 +2,7 @@
 
 import { useState } from 'react'
 import CategorySelect from './category-select'
+import { formatMoney } from '@/lib/format'
 
 type Location = {
   address?: string
@@ -102,8 +103,8 @@ export default function TransactionRow({
           {t.category_source && <span className={badgeClassName}>{t.category_source}</span>}
         </td>
         <td className={amountClassName}>
-          {t.amount < 0 ? '+' : '-'}$
-          {Math.abs(t.amount).toFixed(2)}
+          {t.amount < 0 ? '+' : '-'}
+          {formatMoney(Math.abs(t.amount)).replace('$', '')}
         </td>
       </tr>
       {expanded && (
