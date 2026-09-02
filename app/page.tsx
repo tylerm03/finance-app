@@ -75,7 +75,7 @@ export default async function Home() {
         </div>
         <div>
           <p className="mb-1 text-sm text-gray-500">Net worth</p>
-          <p className="text-5xl font-semibold tabular-nums text-orange-500">
+          <p className="text-5xl font-semibold tabular-nums text-gray-900">
             {formatMoney(netWorth)}
           </p>
         </div>
