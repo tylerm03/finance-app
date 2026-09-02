@@ -2,6 +2,7 @@ import { createClient } from '@/lib/supabase/server'
 import AddVehicleForm from './add-vehicle-form'
 import RefreshValueButton from './refresh-value-button'
 import DeleteAssetButton from './delete-asset-button'
+import { formatMoney } from '@/lib/format'
 
 export default async function AssetsPage() {
   const supabase = await createClient()
@@ -26,7 +27,7 @@ export default async function AssetsPage() {
   return (
     <div className="min-h-screen bg-white p-6 text-gray-900">
       <p className="mb-1 text-sm text-gray-500">Total assets</p>
-      <p className="mb-8 text-6xl font-semibold tabular-nums">${total.toFixed(2)}</p>
+      <p className="mb-8 text-6xl font-semibold tabular-nums">{formatMoney(total)}</p>
 
       <div className="mb-6">
         <AddVehicleForm />
@@ -59,7 +60,7 @@ export default async function AssetsPage() {
                 />
               </div>
               <p className="text-3xl font-semibold tabular-nums text-gray-900">
-                {asset.current_value ? '$' + Number(asset.current_value).toFixed(2) : '—'}
+                {asset.current_value ? formatMoney(Number(asset.current_value)) : '—'}
               </p>
               {asset.value_updated_at && (
                 <p className="mt-1 text-xs text-gray-500">

@@ -4,6 +4,7 @@ import SyncInvestmentsButton from '../sync-investments-button'
 import AddManualAccount from './add-manual-account'
 import HoldingsPieChart from './holdings-pie-chart'
 import HoldingsLegend from './holdings-legend'
+import { formatMoney } from '@/lib/format'
 
 export default async function SavingsPage() {
   const supabase = await createClient()
@@ -53,7 +54,7 @@ export default async function SavingsPage() {
   return (
     <div className="min-h-screen bg-white p-6 text-gray-900">
       <p className="mb-1 text-sm text-gray-500">Total savings & investments</p>
-      <p className="mb-8 text-6xl font-semibold tabular-nums">${total.toFixed(2)}</p>
+      <p className="mb-8 text-6xl font-semibold tabular-nums">{formatMoney(total)}</p>
 
       <div className="mb-6 flex gap-3">
         <ConnectBankButton />
@@ -89,7 +90,7 @@ export default async function SavingsPage() {
                     <span className="font-medium text-gray-900">{account.name}</span>
                     <span className="ml-2 text-xs text-gray-500">{account.subtype}</span>
                   </div>
-                  <span className="tabular-nums text-gray-900">${accountTotal.toFixed(2)}</span>
+                  <span className="tabular-nums text-gray-900">{formatMoney(accountTotal)}</span>
                 </div>
 
                 {accountHoldings.length > 0 ? (
