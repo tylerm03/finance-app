@@ -1,5 +1,6 @@
 import { createClient } from '@/lib/supabase/server'
 import Link from 'next/link'
+import { formatMoney } from '@/lib/format'
 
 export default async function Home() {
   const supabase = await createClient()
@@ -29,9 +30,6 @@ export default async function Home() {
     supabase.from('assets').select('current_value'),
   ])
 
-  // Credit card payments are excluded from spend totals — the real
-  // spend already happened when the card was swiped, so counting the
-  // payment too would double it.
   function isCreditCardPayment(t: any) {
     return t.plaid_category?.detailed === 'LOAN_PAYMENTS_CREDIT_CARD_PAYMENT'
   }
@@ -72,13 +70,13 @@ export default async function Home() {
         <div>
           <p className="mb-1 text-sm text-gray-500">Spent this month</p>
           <p className="text-5xl font-semibold tabular-nums">
-            ${spentThisMonth.toFixed(2)}
+            {formatMoney(spentThisMonth)}
           </p>
         </div>
         <div>
           <p className="mb-1 text-sm text-gray-500">Net worth</p>
           <p className="text-5xl font-semibold tabular-nums text-orange-500">
-            ${netWorth.toFixed(2)}
+            {formatMoney(netWorth)}
           </p>
         </div>
       </div>
@@ -100,7 +98,7 @@ export default async function Home() {
           {upcoming.length === 0 && <p className="text-gray-900">Nothing due soon</p>}
           {upcoming.map((o) => (
             <p key={o.id} className="text-sm text-gray-900">
-              {o.name} — ${Number(o.expected_amount).toFixed(2)}{' '}
+              {o.name} — {formatMoney(Number(o.expected_amount))}{' '}
               <span className="text-gray-500">({o.next_due_date || 'date unknown'})</span>
             </p>
           ))}

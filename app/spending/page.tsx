@@ -1,6 +1,7 @@
 import { createClient } from '@/lib/supabase/server'
 import MonthSelector from './month-selector'
 import CashFlowSankey from './cash-flow-sankey'
+import { formatMoney } from '@/lib/format'
 
 export default async function CashFlowPage({
   searchParams,
@@ -78,7 +79,7 @@ export default async function CashFlowPage({
       <div className="mb-8 grid grid-cols-2 gap-4 sm:grid-cols-4">
         <div className="rounded-lg border border-gray-200 bg-white p-5 text-center shadow-sm">
           <p className="text-2xl font-semibold text-green-600 tabular-nums">
-            ${income.toFixed(2)}
+            {formatMoney(income)}
           </p>
           <p className="mt-1 text-xs font-medium uppercase tracking-wide text-gray-500">
             Total Income
@@ -86,7 +87,7 @@ export default async function CashFlowPage({
         </div>
         <div className="rounded-lg border border-gray-200 bg-white p-5 text-center shadow-sm">
           <p className="text-2xl font-semibold text-red-600 tabular-nums">
-            ${totalExpenses.toFixed(2)}
+            {formatMoney(totalExpenses)}
           </p>
           <p className="mt-1 text-xs font-medium uppercase tracking-wide text-gray-500">
             Total Expenses
@@ -94,7 +95,7 @@ export default async function CashFlowPage({
         </div>
         <div className="rounded-lg border border-gray-200 bg-white p-5 text-center shadow-sm">
           <p className={'text-2xl font-semibold tabular-nums ' + (netIncome >= 0 ? 'text-gray-900' : 'text-red-600')}>
-            ${netIncome.toFixed(2)}
+            {formatMoney(netIncome)}
           </p>
           <p className="mt-1 text-xs font-medium uppercase tracking-wide text-gray-500">
             Total Net Income
