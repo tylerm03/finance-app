@@ -19,7 +19,7 @@ export default async function CashFlowPage({
 
   const { data: transactions, error } = await supabase
     .from('transactions')
-    .select('category, amount')
+    .select('category, amount, plaid_category')
     .gte('txn_date', rangeStart)
     .lte('txn_date', rangeEnd)
 
@@ -33,13 +33,18 @@ export default async function CashFlowPage({
     )
   }
 
+  function isCreditCardPayment(t: any) {
+    return t.plaid_category?.detailed === 'LOAN_PAYMENTS_CREDIT_CARD_PAYMENT'
+  }
+
   const income = (transactions || [])
-    .filter((t) => t.amount < 0)
+    .filter((t) => t.amount < 0 && !isCreditCardPayment(t))
     .reduce((sum, t) => sum + Math.abs(Number(t.amount)), 0)
 
   const expensesByCategory = new Map<string, number>()
   for (const t of transactions || []) {
     if (t.amount <= 0) continue
+    if (isCreditCardPayment(t)) continue
     const cat = t.category || 'Other'
     expensesByCategory.set(cat, (expensesByCategory.get(cat) || 0) + Number(t.amount))
   }

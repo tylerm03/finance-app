@@ -26,12 +26,13 @@ export default async function TransactionsPage({
   const monthStart = new Date(now.getFullYear(), now.getMonth(), 1).toISOString().split('T')[0]
   const { data: monthTxns } = await supabase
     .from('transactions')
-    .select('category, amount')
+    .select('category, amount, plaid_category')
     .gte('txn_date', monthStart)
     .gt('amount', 0)
 
   const totals = new Map<string, number>()
   for (const t of monthTxns || []) {
+    if ((t as any).plaid_category?.detailed === 'LOAN_PAYMENTS_CREDIT_CARD_PAYMENT') continue
     const cat = t.category || 'Other'
     totals.set(cat, (totals.get(cat) || 0) + Number(t.amount))
   }

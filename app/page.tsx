@@ -20,8 +20,8 @@ export default async function Home() {
     holdingsRes,
     assetsRes,
   ] = await Promise.all([
-    supabase.from('transactions').select('amount').gte('txn_date', monthStart).gt('amount', 0),
-    supabase.from('transactions').select('amount').gte('txn_date', lastMonthStart).lte('txn_date', lastMonthEnd).gt('amount', 0),
+    supabase.from('transactions').select('amount, plaid_category').gte('txn_date', monthStart).gt('amount', 0),
+    supabase.from('transactions').select('amount, plaid_category').gte('txn_date', lastMonthStart).lte('txn_date', lastMonthEnd).gt('amount', 0),
     supabase.from('transactions').select('id', { count: 'exact', head: true }).is('category', null),
     supabase.from('recurring_obligations').select('*').eq('is_active', true).neq('status', 'cleared').order('next_due_date', { ascending: true }).limit(3),
     supabase.from('accounts').select('id, current_balance').or('type.eq.investment,subtype.eq.savings,subtype.eq.checking'),
@@ -29,14 +29,22 @@ export default async function Home() {
     supabase.from('assets').select('current_value'),
   ])
 
-  const spentThisMonth = (thisMonthRes.data || []).reduce((s, t) => s + Number(t.amount), 0)
-  const spentLastMonth = (lastMonthRes.data || []).reduce((s, t) => s + Number(t.amount), 0)
+  // Credit card payments are excluded from spend totals — the real
+  // spend already happened when the card was swiped, so counting the
+  // payment too would double it.
+  function isCreditCardPayment(t: any) {
+    return t.plaid_category?.detailed === 'LOAN_PAYMENTS_CREDIT_CARD_PAYMENT'
+  }
+
+  const spentThisMonth = (thisMonthRes.data || [])
+    .filter((t) => !isCreditCardPayment(t))
+    .reduce((s, t) => s + Number(t.amount), 0)
+  const spentLastMonth = (lastMonthRes.data || [])
+    .filter((t) => !isCreditCardPayment(t))
+    .reduce((s, t) => s + Number(t.amount), 0)
   const uncategorizedCount = uncategorizedRes.count || 0
   const upcoming = upcomingRes.data || []
 
-  // Net worth: for each savings/investment account, use its holdings
-  // total if it has holdings, otherwise its plain cash balance — same
-  // logic as the Savings page — plus every tracked asset's value.
   const holdingsByAccount = new Map<string, number>()
   for (const h of holdingsRes.data || []) {
     holdingsByAccount.set(
@@ -76,18 +84,18 @@ export default async function Home() {
       </div>
 
       <div className="mb-8 grid grid-cols-1 gap-4 sm:grid-cols-3">
-        <div className="rounded border border-gray-200 bg-gray-50 p-4">
+        <div className="rounded border border-gray-200 bg-white p-4">
           <p className="mb-1 text-sm text-gray-500">Pace</p>
-          <p className={`text-lg font-medium ${onTrack ? 'text-orange-500' : 'text-red-600'}`}>
+          <p className={'text-lg font-medium ' + (onTrack ? 'text-orange-500' : 'text-red-600')}>
             {spentLastMonth === 0
               ? 'Not enough history yet'
               : onTrack
               ? 'On track'
-              : `Ahead of last month's pace`}
+              : "Ahead of last month's pace"}
           </p>
         </div>
 
-        <div className="rounded border border-gray-200 bg-gray-50 p-4">
+        <div className="rounded border border-gray-200 bg-white p-4">
           <p className="mb-1 text-sm text-gray-500">Coming up</p>
           {upcoming.length === 0 && <p className="text-gray-900">Nothing due soon</p>}
           {upcoming.map((o) => (
@@ -100,15 +108,14 @@ export default async function Home() {
 
         <Link
           href="/transactions?category=__uncategorized__"
-          className={`rounded border p-4 ${
-            uncategorizedCount > 0
-              ? 'border-red-300 bg-red-50'
-              : 'border-gray-200 bg-gray-50'
-          }`}
+          className={
+            'rounded border p-4 ' +
+            (uncategorizedCount > 0 ? 'border-red-300 bg-red-50' : 'border-gray-200 bg-white')
+          }
         >
           <p className="mb-1 text-sm text-gray-500">Uncategorized</p>
-          <p className={`text-lg font-medium ${uncategorizedCount > 0 ? 'text-red-600' : 'text-gray-900'}`}>
-            {uncategorizedCount === 0 ? 'All caught up' : `${uncategorizedCount} to review`}
+          <p className={'text-lg font-medium ' + (uncategorizedCount > 0 ? 'text-red-600' : 'text-gray-900')}>
+            {uncategorizedCount === 0 ? 'All caught up' : uncategorizedCount + ' to review'}
           </p>
         </Link>
       </div>
