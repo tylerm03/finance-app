@@ -1,6 +1,7 @@
 import { createClient } from '@/lib/supabase/server'
 import Link from 'next/link'
 import { formatMoney } from '@/lib/format'
+import { isCreditCardPayment } from '@/lib/categorization/transfers'
 
 export default async function Home() {
   const supabase = await createClient()
@@ -21,18 +22,14 @@ export default async function Home() {
     holdingsRes,
     assetsRes,
   ] = await Promise.all([
-    supabase.from('transactions').select('amount, plaid_category').gte('txn_date', monthStart).gt('amount', 0),
-    supabase.from('transactions').select('amount, plaid_category').gte('txn_date', lastMonthStart).lte('txn_date', lastMonthEnd).gt('amount', 0),
+    supabase.from('transactions').select('amount, description, merchant_name, plaid_category').gte('txn_date', monthStart).gt('amount', 0),
+    supabase.from('transactions').select('amount, description, merchant_name, plaid_category').gte('txn_date', lastMonthStart).lte('txn_date', lastMonthEnd).gt('amount', 0),
     supabase.from('transactions').select('id', { count: 'exact', head: true }).is('category', null),
     supabase.from('recurring_obligations').select('*').eq('is_active', true).neq('status', 'cleared').order('next_due_date', { ascending: true }).limit(3),
     supabase.from('accounts').select('id, current_balance').or('type.eq.investment,subtype.eq.savings,subtype.eq.checking'),
     supabase.from('holdings').select('account_id, institution_value'),
     supabase.from('assets').select('current_value'),
   ])
-
-  function isCreditCardPayment(t: any) {
-    return t.plaid_category?.detailed === 'LOAN_PAYMENTS_CREDIT_CARD_PAYMENT'
-  }
 
   const spentThisMonth = (thisMonthRes.data || [])
     .filter((t) => !isCreditCardPayment(t))

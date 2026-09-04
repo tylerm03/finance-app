@@ -2,6 +2,7 @@ import { createClient } from '@/lib/supabase/server'
 import MonthSelector from './month-selector'
 import CashFlowSankey from './cash-flow-sankey'
 import { formatMoney } from '@/lib/format'
+import { isCreditCardPayment } from '@/lib/categorization/transfers'
 
 export default async function CashFlowPage({
   searchParams,
@@ -20,7 +21,7 @@ export default async function CashFlowPage({
 
   const { data: transactions, error } = await supabase
     .from('transactions')
-    .select('category, amount, plaid_category')
+    .select('category, amount, description, merchant_name, plaid_category')
     .gte('txn_date', rangeStart)
     .lte('txn_date', rangeEnd)
 
@@ -32,10 +33,6 @@ export default async function CashFlowPage({
         </p>
       </div>
     )
-  }
-
-  function isCreditCardPayment(t: any) {
-    return t.plaid_category?.detailed === 'LOAN_PAYMENTS_CREDIT_CARD_PAYMENT'
   }
 
   const income = (transactions || [])
