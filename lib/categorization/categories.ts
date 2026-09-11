@@ -16,4 +16,5 @@ export const CATEGORIES = [
   'TRAVEL',
   'RENT_AND_UTILITIES',
   'OTHER_EXPENSE',
+  'EXCLUDED',
 ]

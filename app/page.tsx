@@ -22,8 +22,8 @@ export default async function Home() {
     holdingsRes,
     assetsRes,
   ] = await Promise.all([
-    supabase.from('transactions').select('amount, description, merchant_name, plaid_category').gte('txn_date', monthStart).gt('amount', 0),
-    supabase.from('transactions').select('amount, description, merchant_name, plaid_category').gte('txn_date', lastMonthStart).lte('txn_date', lastMonthEnd).gt('amount', 0),
+    supabase.from('transactions').select('amount, category, description, merchant_name, plaid_category').gte('txn_date', monthStart).gt('amount', 0),
+    supabase.from('transactions').select('amount, category, description, merchant_name, plaid_category').gte('txn_date', lastMonthStart).lte('txn_date', lastMonthEnd).gt('amount', 0),
     supabase.from('transactions').select('id', { count: 'exact', head: true }).is('category', null),
     supabase.from('recurring_obligations').select('*').eq('is_active', true).neq('status', 'cleared').order('next_due_date', { ascending: true }).limit(3),
     supabase.from('accounts').select('id, current_balance').or('type.eq.investment,subtype.eq.savings,subtype.eq.checking'),
@@ -32,10 +32,10 @@ export default async function Home() {
   ])
 
   const spentThisMonth = (thisMonthRes.data || [])
-    .filter((t) => !isCreditCardPayment(t))
+    .filter((t) => !isCreditCardPayment(t) && t.category !== 'EXCLUDED')
     .reduce((s, t) => s + Number(t.amount), 0)
   const spentLastMonth = (lastMonthRes.data || [])
-    .filter((t) => !isCreditCardPayment(t))
+    .filter((t) => !isCreditCardPayment(t) && t.category !== 'EXCLUDED')
     .reduce((s, t) => s + Number(t.amount), 0)
   const uncategorizedCount = uncategorizedRes.count || 0
   const upcoming = upcomingRes.data || []

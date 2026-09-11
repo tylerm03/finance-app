@@ -34,6 +34,7 @@ export default async function TransactionsPage({
   const totals = new Map<string, number>()
   for (const t of monthTxns || []) {
     if (isCreditCardPayment(t)) continue
+    if (t.category === 'EXCLUDED') continue
     const cat = t.category || 'Other'
     totals.set(cat, (totals.get(cat) || 0) + Number(t.amount))
   }
