@@ -12,7 +12,7 @@ export default async function SavingsPage() {
   const { data: accounts, error: accountsError } = await supabase
     .from('accounts')
     .select('*')
-    .or('type.eq.investment,subtype.eq.savings,subtype.eq.checking')
+    .in('type', ['investment', 'depository'])
     .order('name')
 
   const { data: holdings, error: holdingsError } = await supabase
