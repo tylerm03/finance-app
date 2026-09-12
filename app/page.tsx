@@ -1,45 +1,25 @@
 import { createClient } from '@/lib/supabase/server'
-import Link from 'next/link'
 import { formatMoney } from '@/lib/format'
-import { isCreditCardPayment } from '@/lib/categorization/transfers'
+
+const PERIODS_PER_YEAR: Record<string, number> = {
+  weekly: 52,
+  biweekly: 26,
+  semimonthly: 24,
+  monthly: 12,
+}
 
 export default async function Home() {
   const supabase = await createClient()
 
-  const now = new Date()
-  const dayOfMonth = now.getDate()
-  const daysInMonth = new Date(now.getFullYear(), now.getMonth() + 1, 0).getDate()
-  const monthStart = new Date(now.getFullYear(), now.getMonth(), 1).toISOString().split('T')[0]
-  const lastMonthStart = new Date(now.getFullYear(), now.getMonth() - 1, 1).toISOString().split('T')[0]
-  const lastMonthEnd = new Date(now.getFullYear(), now.getMonth(), 0).toISOString().split('T')[0]
-
-  const [
-    thisMonthRes,
-    lastMonthRes,
-    uncategorizedRes,
-    upcomingRes,
-    savingsAccountsRes,
-    holdingsRes,
-    assetsRes,
-  ] = await Promise.all([
-    supabase.from('transactions').select('amount, category, description, merchant_name, plaid_category').gte('txn_date', monthStart).gt('amount', 0),
-    supabase.from('transactions').select('amount, category, description, merchant_name, plaid_category').gte('txn_date', lastMonthStart).lte('txn_date', lastMonthEnd).gt('amount', 0),
-    supabase.from('transactions').select('id', { count: 'exact', head: true }).is('category', null),
-    supabase.from('recurring_obligations').select('*').eq('is_active', true).neq('status', 'cleared').order('next_due_date', { ascending: true }).limit(3),
-    supabase.from('accounts').select('id, current_balance').or('type.eq.investment,subtype.eq.savings,subtype.eq.checking'),
+  const [savingsAccountsRes, holdingsRes, assetsRes, paystubsRes] = await Promise.all([
+    supabase.from('accounts').select('id, current_balance').in('type', ['investment', 'depository']),
     supabase.from('holdings').select('account_id, institution_value'),
     supabase.from('assets').select('current_value'),
+    supabase.from('paystubs').select('net_pay, pay_frequency'),
   ])
 
-  const spentThisMonth = (thisMonthRes.data || [])
-    .filter((t) => !isCreditCardPayment(t) && t.category !== 'EXCLUDED')
-    .reduce((s, t) => s + Number(t.amount), 0)
-  const spentLastMonth = (lastMonthRes.data || [])
-    .filter((t) => !isCreditCardPayment(t) && t.category !== 'EXCLUDED')
-    .reduce((s, t) => s + Number(t.amount), 0)
-  const uncategorizedCount = uncategorizedRes.count || 0
-  const upcoming = upcomingRes.data || []
-
+  // Net worth: savings/investment account holdings or cash balance,
+  // plus tracked assets (vehicles, etc.)
   const holdingsByAccount = new Map<string, number>()
   for (const h of holdingsRes.data || []) {
     holdingsByAccount.set(
@@ -54,65 +34,62 @@ export default async function Home() {
   }, 0)
 
   const assetsTotal = (assetsRes.data || []).reduce((sum, a) => sum + Number(a.current_value || 0), 0)
-
   const netWorth = savingsTotal + assetsTotal
 
-  const expectedPaceAmount = spentLastMonth * (dayOfMonth / daysInMonth)
-  const paceDiff = spentThisMonth - expectedPaceAmount
-  const onTrack = spentLastMonth === 0 || paceDiff <= expectedPaceAmount * 0.1
+  // Average monthly net (take-home) pay, converting each paystub to a
+  // monthly-equivalent based on its frequency before averaging — same
+  // approach as the Paystubs page.
+  const monthlyNetEquivalents = (paystubsRes.data || []).map((p) => {
+    const periodsPerYear = PERIODS_PER_YEAR[p.pay_frequency] || 26
+    return Number(p.net_pay) * (periodsPerYear / 12)
+  })
+
+  const avgMonthlyNet =
+    monthlyNetEquivalents.length > 0
+      ? monthlyNetEquivalents.reduce((s, v) => s + v, 0) / monthlyNetEquivalents.length
+      : 0
+
+  const budgetThird = avgMonthlyNet / 3
 
   return (
     <div className="min-h-screen bg-white p-6 text-gray-900">
-      <div className="mb-8 grid grid-cols-1 gap-6 sm:grid-cols-2">
-        <div>
-          <p className="mb-1 text-sm text-gray-500">Spent this month</p>
-          <p className="text-5xl font-semibold tabular-nums">
-            {formatMoney(spentThisMonth)}
-          </p>
-        </div>
-        <div>
-          <p className="mb-1 text-sm text-gray-500">Net worth</p>
-          <p className="text-5xl font-semibold tabular-nums text-gray-900">
-            {formatMoney(netWorth)}
-          </p>
-        </div>
+      <div className="mb-10">
+        <p className="mb-1 text-sm text-gray-500">Net worth</p>
+        <p className="text-5xl font-semibold tabular-nums">{formatMoney(netWorth)}</p>
       </div>
 
-      <div className="mb-8 grid grid-cols-1 gap-4 sm:grid-cols-3">
-        <div className="rounded border border-gray-200 bg-white p-4">
-          <p className="mb-1 text-sm text-gray-500">Pace</p>
-          <p className={'text-lg font-medium ' + (onTrack ? 'text-orange-500' : 'text-red-600')}>
-            {spentLastMonth === 0
-              ? 'Not enough history yet'
-              : onTrack
-              ? 'On track'
-              : "Ahead of last month's pace"}
-          </p>
-        </div>
+      <div>
+        <h2 className="mb-1 text-lg font-semibold text-gray-900">Budget</h2>
+        <p className="mb-4 text-sm text-gray-500">
+          Based on average monthly take-home pay of {formatMoney(avgMonthlyNet)}, split evenly
+        </p>
 
-        <div className="rounded border border-gray-200 bg-white p-4">
-          <p className="mb-1 text-sm text-gray-500">Coming up</p>
-          {upcoming.length === 0 && <p className="text-gray-900">Nothing due soon</p>}
-          {upcoming.map((o) => (
-            <p key={o.id} className="text-sm text-gray-900">
-              {o.name} — {formatMoney(Number(o.expected_amount))}{' '}
-              <span className="text-gray-500">({o.next_due_date || 'date unknown'})</span>
-            </p>
-          ))}
-        </div>
-
-        <Link
-          href="/transactions?category=__uncategorized__"
-          className={
-            'rounded border p-4 ' +
-            (uncategorizedCount > 0 ? 'border-red-300 bg-red-50' : 'border-gray-200 bg-white')
-          }
-        >
-          <p className="mb-1 text-sm text-gray-500">Uncategorized</p>
-          <p className={'text-lg font-medium ' + (uncategorizedCount > 0 ? 'text-red-600' : 'text-gray-900')}>
-            {uncategorizedCount === 0 ? 'All caught up' : uncategorizedCount + ' to review'}
+        {avgMonthlyNet === 0 ? (
+          <p className="text-gray-500">
+            No paystubs yet — add one on the Paystubs page to see your budget breakdown.
           </p>
-        </Link>
+        ) : (
+          <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
+            <div className="rounded-lg border border-gray-200 bg-white p-5">
+              <p className="text-sm text-gray-500">Rent</p>
+              <p className="text-2xl font-semibold tabular-nums text-gray-900">
+                {formatMoney(budgetThird)}
+              </p>
+            </div>
+            <div className="rounded-lg border border-gray-200 bg-white p-5">
+              <p className="text-sm text-gray-500">Expenses</p>
+              <p className="text-2xl font-semibold tabular-nums text-gray-900">
+                {formatMoney(budgetThird)}
+              </p>
+            </div>
+            <div className="rounded-lg border border-gray-200 bg-white p-5">
+              <p className="text-sm text-gray-500">Savings</p>
+              <p className="text-2xl font-semibold tabular-nums text-orange-500">
+                {formatMoney(budgetThird)}
+              </p>
+            </div>
+          </div>
+        )}
       </div>
     </div>
   )
