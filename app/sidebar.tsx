@@ -9,6 +9,7 @@ import {
   PiggyBank,
   Car,
   CalendarClock,
+  FileText,
 } from 'lucide-react'
 
 const links = [
@@ -18,6 +19,7 @@ const links = [
   { href: '/savings', label: 'Savings', icon: PiggyBank },
   { href: '/assets', label: 'Assets', icon: Car },
   { href: '/recurring', label: 'Recurring', icon: CalendarClock },
+  { href: '/paystubs', label: 'Paystubs', icon: FileText },
 ]
 
 export default function Sidebar() {
