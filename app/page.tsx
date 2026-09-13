@@ -2,7 +2,6 @@ import { createClient } from '@/lib/supabase/server'
 import { formatMoney } from '@/lib/format'
 import { isCreditCardPayment } from '@/lib/categorization/transfers'
 import SpendingPieChart from './spending/spending-pie-chart'
-import SpendingLegend from './spending/spending-legend'
 
 const PERIODS_PER_YEAR: Record<string, number> = {
   weekly: 52,
@@ -39,7 +38,6 @@ export default async function Home() {
       .gt('amount', 0),
   ])
 
-  // Net worth
   const holdingsByAccount = new Map<string, number>()
   for (const h of holdingsRes.data || []) {
     holdingsByAccount.set(
@@ -54,7 +52,6 @@ export default async function Home() {
   const assetsTotal = (assetsRes.data || []).reduce((sum, a) => sum + Number(a.current_value || 0), 0)
   const netWorth = savingsTotal + assetsTotal
 
-  // Average monthly take-home pay -> budget thirds
   const monthlyNetEquivalents = (paystubsRes.data || []).map((p) => {
     const periodsPerYear = PERIODS_PER_YEAR[p.pay_frequency] || 26
     return Number(p.net_pay) * (periodsPerYear / 12)
@@ -65,7 +62,6 @@ export default async function Home() {
       : 0
   const budgetThird = avgMonthlyNet / 3
 
-  // This month's real spending, split into Rent & Utilities vs everything else
   const validTxns = (monthTxnsRes.data || []).filter(
     (t) => !isCreditCardPayment(t) && t.category !== 'EXCLUDED'
   )
@@ -76,7 +72,6 @@ export default async function Home() {
   const rentTotal = rentTxns.reduce((s, t) => s + Number(t.amount), 0)
   const otherTotal = otherTxns.reduce((s, t) => s + Number(t.amount), 0)
 
-  // Rent & Utilities chart: broken down by merchant (rent, electric, water, etc.)
   const rentByMerchant = new Map<string, number>()
   for (const t of rentTxns) {
     const label = t.merchant_name || t.description || 'Other'
@@ -86,7 +81,6 @@ export default async function Home() {
     .sort((a, b) => b[1] - a[1])
     .map(([category, amount]) => ({ category, amount }))
 
-  // Other expenses chart: broken down by category, same pattern used elsewhere
   const otherByCategory = new Map<string, number>()
   for (const t of otherTxns) {
     const cat = t.category || 'OTHER_EXPENSE'
@@ -123,9 +117,8 @@ export default async function Home() {
               {rentChartData.length === 0 ? (
                 <p className="text-sm text-gray-500">No rent/utilities spending recorded yet this month.</p>
               ) : (
-                <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+                <div className="flex justify-center">
                   <SpendingPieChart data={rentChartData} />
-                  <SpendingLegend data={rentChartData} total={rentTotal} />
                 </div>
               )}
             </div>
@@ -138,9 +131,8 @@ export default async function Home() {
               {otherChartData.length === 0 ? (
                 <p className="text-sm text-gray-500">No other spending recorded yet this month.</p>
               ) : (
-                <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+                <div className="flex justify-center">
                   <SpendingPieChart data={otherChartData} />
-                  <SpendingLegend data={otherChartData} total={otherTotal} />
                 </div>
               )}
             </div>
