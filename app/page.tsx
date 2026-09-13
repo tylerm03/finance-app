@@ -108,7 +108,7 @@ export default async function Home() {
             No paystubs yet — add one on the Paystubs page to see your budget breakdown.
           </p>
         ) : (
-          <div className="space-y-6">
+          <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
             <div className="rounded-lg border border-gray-200 bg-white p-5">
               <div className="mb-3 flex items-center justify-between">
                 <p className="text-sm font-medium text-gray-900">Rent</p>
