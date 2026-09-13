@@ -13,10 +13,14 @@ const PERIODS_PER_YEAR: Record<string, number> = {
 function BudgetVsActual({ spent, budget }: { spent: number; budget: number }) {
   const over = spent > budget
   return (
-    <p className={'text-sm ' + (over ? 'text-red-600' : 'text-gray-500')}>
-      {formatMoney(spent)} of {formatMoney(budget)} budgeted
-      {over ? ' — over' : ''}
-    </p>
+    <div>
+      <p className={'text-2xl font-semibold tabular-nums ' + (over ? 'text-red-600' : 'text-orange-500')}>
+        {formatMoney(spent)}
+      </p>
+      <p className='text-xs text-gray-500'>
+        of {formatMoney(budget)} budgeted{over ? ' — over' : ''}
+      </p>
+    </div>
   )
 }
 
@@ -110,7 +114,7 @@ export default async function Home() {
         ) : (
           <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
             <div className="rounded-lg border border-gray-200 bg-white p-5">
-              <div className="mb-3 flex items-center justify-between">
+              <div className="mb-3">
                 <p className="text-sm font-medium text-gray-900">Rent</p>
                 <BudgetVsActual spent={rentTotal} budget={budgetThird} />
               </div>
@@ -124,7 +128,7 @@ export default async function Home() {
             </div>
 
             <div className="rounded-lg border border-gray-200 bg-white p-5">
-              <div className="mb-3 flex items-center justify-between">
+              <div className="mb-3">
                 <p className="text-sm font-medium text-gray-900">Expenses</p>
                 <BudgetVsActual spent={otherTotal} budget={budgetThird} />
               </div>
