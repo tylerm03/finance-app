@@ -10,14 +10,14 @@ import type { AccountOption, TxnParams } from './types'
 export const BTN =
   'flex h-11 items-center gap-2 rounded-lg border border-[#e4e1dc] bg-white px-4 text-[16px] font-medium text-[#1f1d1a] hover:bg-[#faf9f7] disabled:opacity-60'
 
-export function useParamUpdater(params: TxnParams) {
+export function useParamUpdater(params: TxnParams, basePath = '/transactions') {
   const router = useRouter()
   return (updates: Partial<TxnParams>) => {
     const next = new URLSearchParams()
     const merged = { ...params, ...updates }
     for (const [k, v] of Object.entries(merged)) if (v) next.set(k, v)
     const qs = next.toString()
-    router.push('/transactions' + (qs ? '?' + qs : ''))
+    router.push(basePath + (qs ? '?' + qs : ''))
   }
 }
 
@@ -39,7 +39,7 @@ function iso(d: Date) {
   return d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0')
 }
 
-function presets() {
+export function presets() {
   const now = new Date()
   const y = now.getFullYear()
   const m = now.getMonth()
@@ -117,8 +117,8 @@ function SearchButton({ params }: { params: TxnParams }) {
   )
 }
 
-function DateButton({ params }: { params: TxnParams }) {
-  const update = useParamUpdater(params)
+export function DateButton({ params, basePath }: { params: TxnParams; basePath?: string }) {
+  const update = useParamUpdater(params, basePath)
   const { open, setOpen, ref } = usePopover()
   const [from, setFrom] = useState(params.from || '')
   const [to, setTo] = useState(params.to || '')
@@ -176,8 +176,16 @@ function DateButton({ params }: { params: TxnParams }) {
   )
 }
 
-function FiltersButton({ params, accounts }: { params: TxnParams; accounts: AccountOption[] }) {
-  const update = useParamUpdater(params)
+export function FiltersButton({
+  params,
+  accounts,
+  basePath,
+}: {
+  params: TxnParams
+  accounts: AccountOption[]
+  basePath?: string
+}) {
+  const update = useParamUpdater(params, basePath)
   const { open, setOpen, ref } = usePopover()
   const count = (params.category ? 1 : 0) + (params.account ? 1 : 0)
   const select =

@@ -50,7 +50,7 @@ function Checkbox({ state }: { state: 'on' | 'off' | 'some' }) {
 const LOGO_BG = ['#fde7d9', '#dbeafe', '#dcfce7', '#ede9fe', '#fce7f3', '#ccfbf1']
 const LOGO_FG = ['#b4501c', '#1d4ed8', '#15803d', '#6d28d9', '#be185d', '#0f766e']
 
-function MerchantLogo({ t }: { t: Txn }) {
+export function MerchantLogo({ t }: { t: Txn }) {
   const [broken, setBroken] = useState(false)
   if (t.logo && !broken) {
     return (
