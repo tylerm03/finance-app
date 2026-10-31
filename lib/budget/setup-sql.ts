@@ -1,6 +1,6 @@
-// One-time Supabase setup for the Budget page. The Budget page shows this with a
+// One-time Supabase setup for Budget, Forecast and Recurring. The Budget page shows this with a
 // Copy button until the tables exist; paste it into Supabase -> SQL Editor -> Run.
-export const BUDGET_SETUP_SQL = `-- Budget & Forecast setup. Run this once in Supabase: SQL Editor -> New query -> paste -> Run.
+export const BUDGET_SETUP_SQL = `-- App setup (Budget, Forecast, Recurring). Run this once in Supabase: SQL Editor -> New query -> paste -> Run.
 -- Safe to run more than once.
 
 -- One row per category per month you've set a budget for.
@@ -54,5 +54,26 @@ alter table public.forecast_scenarios enable row level security;
 
 drop policy if exists "own forecast scenarios" on public.forecast_scenarios;
 create policy "own forecast scenarios" on public.forecast_scenarios
+  for all using (user_id = auth.uid()) with check (user_id = auth.uid());
+
+-- Payments you've marked as recurring yourself (Transactions -> Make recurring)
+create table if not exists public.recurring_marks (
+  id uuid primary key default gen_random_uuid(),
+  user_id uuid not null default auth.uid() references auth.users (id) on delete cascade,
+  merchant_key text not null,
+  merchant text not null,
+  day int not null check (day between 1 and 31),
+  amount numeric(12, 2) not null,
+  category text,
+  account_id uuid,
+  start_date date not null,
+  created_at timestamptz not null default now(),
+  unique (user_id, merchant_key, day)
+);
+
+alter table public.recurring_marks enable row level security;
+
+drop policy if exists "own recurring marks" on public.recurring_marks;
+create policy "own recurring marks" on public.recurring_marks
   for all using (user_id = auth.uid()) with check (user_id = auth.uid());
 `

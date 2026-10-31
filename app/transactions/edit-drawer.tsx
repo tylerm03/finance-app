@@ -9,6 +9,7 @@ import { categoryDisplay } from '@/lib/categorization/category-display'
 import { formatMoney } from '@/lib/format'
 import InstitutionAvatar from '../institution-avatar'
 import Combobox from './combobox'
+import RecurringToggle from './recurring-toggle'
 import type { Txn } from './types'
 
 const CATEGORY_OPTIONS = CATEGORIES.filter((c) => c !== 'EXCLUDED').map((c) => ({
@@ -259,6 +260,8 @@ export default function EditDrawer({
                 <ChevronDown size={18} className="pointer-events-none absolute right-4 top-1/2 -translate-y-1/2 text-[#3b3834]" />
               </div>
             </Field>
+
+            {single && <RecurringToggle txn={single} />}
 
             {details.length > 0 && (
               <div className="rounded-lg border border-[#efedea]">
