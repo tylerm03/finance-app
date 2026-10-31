@@ -4,23 +4,24 @@ import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
 
+// Single-user app: log in once per browser and the session renews itself
+// every visit, so you stay logged in. No sign-up, no emailed links.
 export default function LoginPage() {
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [error, setError] = useState<string | null>(null)
-  const [mode, setMode] = useState<'login' | 'signup'>('signup')
+  const [loading, setLoading] = useState(false)
   const router = useRouter()
   const supabase = createClient()
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault()
     setError(null)
+    setLoading(true)
 
-    const { error } =
-      mode === 'signup'
-        ? await supabase.auth.signUp({ email, password })
-        : await supabase.auth.signInWithPassword({ email, password })
+    const { error } = await supabase.auth.signInWithPassword({ email, password })
 
+    setLoading(false)
     if (error) {
       setError(error.message)
       return
@@ -36,13 +37,12 @@ export default function LoginPage() {
         onSubmit={handleSubmit}
         className="w-full max-w-sm rounded-lg border border-gray-200 bg-gray-50 p-6"
       >
-        <h1 className="mb-4 text-lg font-medium text-gray-900">
-          {mode === 'signup' ? 'Create account' : 'Log in'}
-        </h1>
+        <h1 className="mb-4 text-lg font-medium text-gray-900">Log in</h1>
 
         <input
           type="email"
           placeholder="Email"
+          autoComplete="email"
           value={email}
           onChange={(e) => setEmail(e.target.value)}
           className="mb-3 w-full rounded border border-gray-200 bg-white p-2 text-gray-900"
@@ -51,6 +51,7 @@ export default function LoginPage() {
         <input
           type="password"
           placeholder="Password"
+          autoComplete="current-password"
           value={password}
           onChange={(e) => setPassword(e.target.value)}
           className="mb-4 w-full rounded border border-gray-200 bg-white p-2 text-gray-900"
@@ -61,17 +62,10 @@ export default function LoginPage() {
 
         <button
           type="submit"
-          className="w-full rounded bg-orange-500 p-2 font-medium text-white hover:bg-orange-500"
+          disabled={loading}
+          className="w-full rounded bg-orange-500 p-2 font-medium text-white hover:bg-orange-600 disabled:opacity-60"
         >
-          {mode === 'signup' ? 'Sign up' : 'Log in'}
-        </button>
-
-        <button
-          type="button"
-          onClick={() => setMode(mode === 'signup' ? 'login' : 'signup')}
-          className="mt-3 text-sm text-orange-500"
-        >
-          {mode === 'signup' ? 'Already have an account? Log in' : "Need an account? Sign up"}
+          {loading ? 'Logging in...' : 'Log in'}
         </button>
       </form>
     </div>
