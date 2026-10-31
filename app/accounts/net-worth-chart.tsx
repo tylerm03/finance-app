@@ -35,15 +35,15 @@ function ChartTooltip({ active, payload }: { active?: boolean; payload?: { paylo
   )
 }
 
-export default function NetWorthChart({ data }: { data: Point[] }) {
+export default function NetWorthChart({ data, maxLabels = 16 }: { data: Point[]; maxLabels?: number }) {
   const values = data.map((d) => d.value)
   const min = Math.min(...values)
   const max = Math.max(...values)
   const pad = max === min ? Math.max(Math.abs(max) * 0.01, 100) : (max - min) * 0.04
   const domain: [number, number] = [min - pad, max + pad]
   const ticks = Array.from({ length: 5 }, (_, i) => domain[0] + ((domain[1] - domain[0]) * i) / 4)
-  // Roughly 16 date labels across, like one every other day for a month
-  const interval = Math.max(0, Math.ceil(data.length / 16) - 1)
+  // Roughly 16 date labels across (fewer in narrow cards), like one every other day for a month
+  const interval = Math.max(0, Math.ceil(data.length / maxLabels) - 1)
 
   return (
     <ResponsiveContainer width="100%" height={300}>

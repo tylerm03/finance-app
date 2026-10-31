@@ -1,155 +1,106 @@
 import { createClient } from '@/lib/supabase/server'
-import { formatMoney } from '@/lib/format'
-import { isCreditCardPayment } from '@/lib/categorization/transfers'
-import SpendingPieChart from './spending/spending-pie-chart'
+import type { RawTxn } from '@/lib/accounts/build'
+import { classify } from '@/lib/reports/compute'
+import { detectRecurring, withMarks, type RecurringMark } from '@/lib/recurring/detect'
+import { loadTransactions } from './transactions/load'
+import type { Txn } from './transactions/types'
+import { loadAccounts } from './accounts/load'
+import { loadBudget } from './budget/load'
+import DashboardView from './dashboard/dashboard-view'
+import type { DashboardData, Holding } from './dashboard/types'
 
-const PERIODS_PER_YEAR: Record<string, number> = {
-  weekly: 52,
-  biweekly: 26,
-  semimonthly: 24,
-  monthly: 12,
+function pad(n: number) {
+  return String(n).padStart(2, '0')
 }
 
-function BudgetVsActual({ spent, budget }: { spent: number; budget: number }) {
-  const over = spent > budget
-  return (
-    <div>
-      <p className={'text-2xl font-semibold tabular-nums ' + (over ? 'text-red-600' : 'text-orange-500')}>
-        {formatMoney(spent)}
-      </p>
-      <p className='text-xs text-gray-500'>
-        of {formatMoney(budget)} budgeted{over ? ' — over' : ''}
-      </p>
-    </div>
-  )
+// Running total of spending for each day of a month
+function cumulative(txns: Txn[], y: number, m: number, uptoDay?: number) {
+  const days = new Date(y, m, 0).getDate()
+  const prefix = y + '-' + pad(m) + '-'
+  const perDay = new Array<number>(days).fill(0)
+  for (const t of txns) {
+    if (!t.date.startsWith(prefix) || t.pending || classify(t) !== 'expense') continue
+    perDay[Number(t.date.slice(8, 10)) - 1] += t.amount
+  }
+  const out: number[] = []
+  let sum = 0
+  for (let d = 0; d < (uptoDay ?? days); d++) {
+    sum += perDay[d]
+    out.push(Math.round(sum * 100) / 100)
+  }
+  return out
 }
 
-export default async function Home() {
-  const supabase = await createClient()
+function label(y: number, m: number) {
+  return new Date(y, m - 1, 1).toLocaleDateString('en-US', { month: 'long', year: 'numeric' })
+}
 
+export default async function Dashboard() {
   const now = new Date()
-  const monthStart = new Date(now.getFullYear(), now.getMonth(), 1).toISOString().split('T')[0]
+  const y = now.getFullYear()
+  const m = now.getMonth() + 1
+  // 15 months covers net worth history, last year's comparison and recurring detection
+  const from = new Date(y, m - 1 - 15, 1)
+  const fromDay = from.getFullYear() + '-' + pad(from.getMonth() + 1) + '-01'
 
-  const [savingsAccountsRes, holdingsRes, assetsRes, paystubsRes, monthTxnsRes] = await Promise.all([
-    supabase.from('accounts').select('id, current_balance').in('type', ['investment', 'depository']),
-    supabase.from('holdings').select('account_id, institution_value'),
-    supabase.from('assets').select('current_value'),
-    supabase.from('paystubs').select('net_pay, pay_frequency'),
-    supabase
-      .from('transactions')
-      .select('category, amount, merchant_name, description, plaid_category')
-      .gte('txn_date', monthStart)
-      .gt('amount', 0),
+  const supabase = await createClient()
+  const { transactions, error } = await loadTransactions({ from: fromDay }, 20000)
+  const raw: RawTxn[] = transactions.map((t) => ({
+    account_id: t.accountId,
+    txn_date: t.date,
+    amount: t.amount,
+    pending: t.pending,
+  }))
+
+  const [accounts, budget, marksRes, holdingsRes, userRes] = await Promise.all([
+    loadAccounts(raw),
+    loadBudget(undefined, transactions),
+    supabase.from('recurring_marks').select('id, merchant_key, merchant, day, amount, category, start_date'),
+    supabase.from('holdings').select('institution_value, securities(name, ticker_symbol)'),
+    supabase.auth.getUser(),
   ])
 
-  const holdingsByAccount = new Map<string, number>()
+  const marks = (marksRes.error ? [] : marksRes.data || []) as RecurringMark[]
+  const streams = withMarks(detectRecurring(transactions), marks, transactions)
+
+  // Combine the same security held in several accounts
+  const byHolding = new Map<string, Holding>()
   for (const h of holdingsRes.data || []) {
-    holdingsByAccount.set(
-      h.account_id,
-      (holdingsByAccount.get(h.account_id) || 0) + Number(h.institution_value || 0)
-    )
+    const sec = (Array.isArray(h.securities) ? h.securities[0] : h.securities) as { name?: string; ticker_symbol?: string } | null
+    const key = sec?.ticker_symbol || sec?.name || 'Other'
+    const cur = byHolding.get(key) || { key, ticker: sec?.ticker_symbol || null, name: sec?.name || key, value: 0 }
+    cur.value += Number(h.institution_value || 0)
+    byHolding.set(key, cur)
   }
-  const savingsTotal = (savingsAccountsRes.data || []).reduce((sum, a) => {
-    const holdingsValue = holdingsByAccount.get(a.id)
-    return sum + (holdingsValue !== undefined ? holdingsValue : Number(a.current_balance || 0))
-  }, 0)
-  const assetsTotal = (assetsRes.data || []).reduce((sum, a) => sum + Number(a.current_value || 0), 0)
-  const netWorth = savingsTotal + assetsTotal
+  const investmentsTotal = accounts.data.groups
+    .filter((g) => g.key === 'investments')
+    .flatMap((g) => g.accounts)
+    .reduce((s, a) => s + a.balance, 0)
 
-  const monthlyNetEquivalents = (paystubsRes.data || []).map((p) => {
-    const periodsPerYear = PERIODS_PER_YEAR[p.pay_frequency] || 26
-    return Number(p.net_pay) * (periodsPerYear / 12)
-  })
-  const avgMonthlyNet =
-    monthlyNetEquivalents.length > 0
-      ? monthlyNetEquivalents.reduce((s, v) => s + v, 0) / monthlyNetEquivalents.length
-      : 0
-  const budgetThird = avgMonthlyNet / 3
+  const lm = m === 1 ? 12 : m - 1
+  const ly = m === 1 ? y - 1 : y
+  const meta = userRes.data.user?.user_metadata || {}
+  const fullName = (meta.first_name || meta.full_name || meta.name || '') as string
 
-  const validTxns = (monthTxnsRes.data || []).filter(
-    (t) => !isCreditCardPayment(t) && t.category !== 'EXCLUDED'
-  )
-
-  const rentTxns = validTxns.filter((t) => t.category === 'RENT_AND_UTILITIES')
-  const otherTxns = validTxns.filter((t) => t.category !== 'RENT_AND_UTILITIES')
-
-  const rentTotal = rentTxns.reduce((s, t) => s + Number(t.amount), 0)
-  const otherTotal = otherTxns.reduce((s, t) => s + Number(t.amount), 0)
-
-  const rentByMerchant = new Map<string, number>()
-  for (const t of rentTxns) {
-    const label = t.merchant_name || t.description || 'Other'
-    rentByMerchant.set(label, (rentByMerchant.get(label) || 0) + Number(t.amount))
+  const data: DashboardData = {
+    name: fullName ? fullName.split(' ')[0] : null,
+    accounts: accounts.data,
+    budget,
+    spending: {
+      thisMonth: cumulative(transactions, y, m, now.getDate()),
+      lastMonth: cumulative(transactions, ly, lm),
+      lastYear: cumulative(transactions, y - 1, m),
+      monthLabel: label(y, m),
+      lastMonthLabel: label(ly, lm),
+      lastYearLabel: label(y - 1, m),
+    },
+    recent: transactions.slice(0, 40),
+    merchants: [...new Set(transactions.map((t) => t.merchant))].sort().slice(0, 500),
+    streams,
+    holdings: [...byHolding.values()].sort((a, b) => b.value - a.value).slice(0, 8),
+    investmentsTotal,
+    error: error || accounts.error,
   }
-  const rentChartData = [...rentByMerchant.entries()]
-    .sort((a, b) => b[1] - a[1])
-    .map(([category, amount]) => ({ category, amount }))
 
-  const otherByCategory = new Map<string, number>()
-  for (const t of otherTxns) {
-    const cat = t.category || 'OTHER_EXPENSE'
-    otherByCategory.set(cat, (otherByCategory.get(cat) || 0) + Number(t.amount))
-  }
-  const otherChartData = [...otherByCategory.entries()]
-    .sort((a, b) => b[1] - a[1])
-    .map(([category, amount]) => ({ category, amount }))
-
-  return (
-    <div className="min-h-screen bg-white p-6 text-gray-900">
-      <div className="mb-10">
-        <p className="mb-1 text-sm text-gray-500">Net worth</p>
-        <p className="text-5xl font-semibold tabular-nums">{formatMoney(netWorth)}</p>
-      </div>
-
-      <div>
-        <h2 className="mb-1 text-lg font-semibold text-gray-900">Budget</h2>
-        <p className="mb-4 text-sm text-gray-500">
-          Based on average monthly take-home pay of {formatMoney(avgMonthlyNet)}, split evenly
-        </p>
-
-        {avgMonthlyNet === 0 ? (
-          <p className="text-gray-500">
-            No paystubs yet — add one on the Paystubs page to see your budget breakdown.
-          </p>
-        ) : (
-          <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
-            <div className="rounded-lg border border-gray-200 bg-white p-5">
-              <div className="mb-3">
-                <p className="text-sm font-medium text-gray-900">Rent</p>
-                <BudgetVsActual spent={rentTotal} budget={budgetThird} />
-              </div>
-              {rentChartData.length === 0 ? (
-                <p className="text-sm text-gray-500">No rent/utilities spending recorded yet this month.</p>
-              ) : (
-                <div className="flex justify-center">
-                  <SpendingPieChart data={rentChartData} />
-                </div>
-              )}
-            </div>
-
-            <div className="rounded-lg border border-gray-200 bg-white p-5">
-              <div className="mb-3">
-                <p className="text-sm font-medium text-gray-900">Expenses</p>
-                <BudgetVsActual spent={otherTotal} budget={budgetThird} />
-              </div>
-              {otherChartData.length === 0 ? (
-                <p className="text-sm text-gray-500">No other spending recorded yet this month.</p>
-              ) : (
-                <div className="flex justify-center">
-                  <SpendingPieChart data={otherChartData} />
-                </div>
-              )}
-            </div>
-
-            <div className="rounded-lg border border-gray-200 bg-white p-5">
-              <p className="text-sm font-medium text-gray-900">Savings</p>
-              <p className="text-2xl font-semibold tabular-nums text-orange-500">
-                {formatMoney(budgetThird)}
-              </p>
-            </div>
-          </div>
-        )}
-      </div>
-    </div>
-  )
+  return <DashboardView data={data} />
 }

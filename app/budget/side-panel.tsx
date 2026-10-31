@@ -10,7 +10,7 @@ const GREEN = '#2e9e64'
 const RED = '#e5484d'
 const MARKER = '#f2c230'
 
-type Block = {
+export type Block = {
   key: string
   title: string
   budget: number
@@ -20,7 +20,7 @@ type Block = {
   pace?: boolean // warn if spending is ahead of the calendar
 }
 
-function BlockRow({ b, elapsed, showMarker }: { b: Block; elapsed: number; showMarker: boolean }) {
+export function BlockRow({ b, elapsed, showMarker }: { b: Block; elapsed: number; showMarker: boolean }) {
   const remaining = b.budget - b.actual
   const pct = b.budget > 0 ? Math.min(1, b.actual / b.budget) : b.actual > 0 && b.kind === 'expense' ? 1 : 0
   const over = b.kind === 'expense' && remaining < -0.005
