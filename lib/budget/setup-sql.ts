@@ -1,0 +1,58 @@
+// One-time Supabase setup for the Budget page. The Budget page shows this with a
+// Copy button until the tables exist; paste it into Supabase -> SQL Editor -> Run.
+export const BUDGET_SETUP_SQL = `-- Budget & Forecast setup. Run this once in Supabase: SQL Editor -> New query -> paste -> Run.
+-- Safe to run more than once.
+
+-- One row per category per month you've set a budget for.
+-- category is a spending category code (e.g. FOOD_AND_DRINK) or an income
+-- source prefixed with "income:" (e.g. income:INCOME_WAGES).
+create table if not exists public.budgets (
+  id uuid primary key default gen_random_uuid(),
+  user_id uuid not null default auth.uid() references auth.users (id) on delete cascade,
+  month date not null, -- first day of the month
+  category text not null,
+  amount numeric(12, 2) not null default 0,
+  updated_at timestamptz not null default now(),
+  unique (user_id, month, category)
+);
+
+-- Which budget group each spending category belongs to.
+create table if not exists public.budget_categories (
+  user_id uuid not null default auth.uid() references auth.users (id) on delete cascade,
+  category text not null,
+  grp text not null check (grp in ('fixed', 'flexible', 'non_monthly')),
+  primary key (user_id, category)
+);
+
+-- Only you can see or change your own budget rows
+alter table public.budgets enable row level security;
+alter table public.budget_categories enable row level security;
+
+drop policy if exists "own budgets" on public.budgets;
+create policy "own budgets" on public.budgets
+  for all using (user_id = auth.uid()) with check (user_id = auth.uid());
+
+drop policy if exists "own budget categories" on public.budget_categories;
+create policy "own budget categories" on public.budget_categories
+  for all using (user_id = auth.uid()) with check (user_id = auth.uid());
+
+-- Forecast scenarios (Budget -> Forecast tab)
+create table if not exists public.forecast_scenarios (
+  id uuid primary key default gen_random_uuid(),
+  user_id uuid not null default auth.uid() references auth.users (id) on delete cascade,
+  name text not null default 'Base Plan',
+  icon text not null default 'trending-up',
+  color text not null default '#ecebe8',
+  assumptions jsonb not null default '{}'::jsonb,
+  events jsonb not null default '[]'::jsonb,
+  position int not null default 0,
+  created_at timestamptz not null default now(),
+  updated_at timestamptz not null default now()
+);
+
+alter table public.forecast_scenarios enable row level security;
+
+drop policy if exists "own forecast scenarios" on public.forecast_scenarios;
+create policy "own forecast scenarios" on public.forecast_scenarios
+  for all using (user_id = auth.uid()) with check (user_id = auth.uid());
+`
