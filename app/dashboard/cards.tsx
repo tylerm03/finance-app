@@ -426,7 +426,7 @@ export function InvestmentsCard({ total, holdings }: { total: number; holdings: 
     <section className={CARD}>
       <CardHeader
         title={
-          <Link href="/savings" className="hover:underline">
+          <Link href="/accounts" className="hover:underline">
             {formatMoney(total)} investments
           </Link>
         }

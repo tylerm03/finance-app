@@ -6,13 +6,9 @@ import {
   Home,
   Layers,
   Receipt,
-  BarChart3,
   PieChart,
   Map as MapIcon,
-  PiggyBank,
-  Car,
   CalendarClock,
-  FileText,
   Settings,
 } from 'lucide-react'
 
@@ -20,13 +16,9 @@ const links = [
   { href: '/', label: 'Dashboard', icon: Home },
   { href: '/accounts', label: 'Accounts', icon: Layers },
   { href: '/transactions', label: 'Transactions', icon: Receipt },
-  { href: '/spending', label: 'Cash Flow', icon: BarChart3 },
   { href: '/reports', label: 'Reports', icon: PieChart },
   { href: '/budget', label: 'Budget', icon: MapIcon },
-  { href: '/savings', label: 'Savings', icon: PiggyBank },
-  { href: '/assets', label: 'Assets', icon: Car },
   { href: '/recurring', label: 'Recurring', icon: CalendarClock },
-  { href: '/paystubs', label: 'Paystubs', icon: FileText },
 ]
 
 export default function Sidebar() {
