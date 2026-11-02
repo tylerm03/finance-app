@@ -1,6 +1,7 @@
 // Friendly names and emoji for the category codes stored on transactions.
 const DISPLAY: Record<string, { label: string; emoji: string }> = {
   INCOME: { label: 'Income', emoji: '💵' },
+  PAYCHECK: { label: 'Paychecks', emoji: '💰' },
   TRANSFER_IN: { label: 'Transfer In', emoji: '🔁' },
   TRANSFER_OUT: { label: 'Transfer Out', emoji: '🔁' },
   LOAN_PAYMENTS: { label: 'Loan Payments', emoji: '🏦' },

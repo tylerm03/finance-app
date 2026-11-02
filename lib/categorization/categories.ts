@@ -1,5 +1,6 @@
 export const CATEGORIES = [
   'INCOME',
+  'PAYCHECK',
   'TRANSFER_IN',
   'TRANSFER_OUT',
   'LOAN_PAYMENTS',

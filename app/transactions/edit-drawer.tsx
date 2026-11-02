@@ -63,6 +63,7 @@ export default function EditDrawer({
   const [date, setDate] = useState(single ? single.date : '')
   const [hide, setHide] = useState<'' | 'hide' | 'unhide'>('')
   const [busy, setBusy] = useState(false)
+  const [applyAll, setApplyAll] = useState(true)
   const [error, setError] = useState<string | null>(null)
 
   const accounts = useMemo(() => {
@@ -128,6 +129,15 @@ export default function EditDrawer({
           await supabase.from('category_rules').insert({ merchant_entity_id: entityId, category: changes.category })
         }
       }
+    }
+
+    // Same payer/merchant everywhere else too (and future ones learn from this)
+    if (single && applyAll && changes.category && changes.category !== 'EXCLUDED') {
+      await fetch('/api/transactions/apply-category', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ id: single.id, category: changes.category }),
+      }).catch(() => null)
     }
 
     setBusy(false)
@@ -228,6 +238,29 @@ export default function EditDrawer({
                 onChange={setCategory}
                 placeholder="Search categories..."
               />
+              {single && single.amount < 0 && category !== 'PAYCHECK' && (
+                <button
+                  type="button"
+                  onClick={() => setCategory('PAYCHECK')}
+                  className="mt-2.5 inline-flex h-9 items-center gap-2 rounded-full border border-[#e4e1dc] bg-white px-3.5 text-[14px] font-medium text-[#1f1d1a] hover:bg-[#faf9f7]"
+                >
+                  <span>💰</span>
+                  Mark as paycheck
+                </button>
+              )}
+              {single && changes.category && changes.category !== 'EXCLUDED' && (
+                <label className="mt-3 flex cursor-pointer items-start gap-2.5 text-[14px] text-[#3b3834]">
+                  <input
+                    type="checkbox"
+                    checked={applyAll}
+                    onChange={(e) => setApplyAll(e.target.checked)}
+                    className="mt-0.5 h-4 w-4 accent-orange-500"
+                  />
+                  <span>
+                    Also use this for every past and future transaction from <b>{single.merchant}</b>
+                  </span>
+                </label>
+              )}
             </Field>
 
             <Field label="Date">

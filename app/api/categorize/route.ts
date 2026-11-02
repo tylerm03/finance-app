@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
 import { mapPlaidCategory } from '@/lib/categorization/plaid-mapping'
 import { CATEGORIES } from '@/lib/categorization/categories'
+import { matchKey } from '@/lib/categorization/match-key'
 
 export async function POST() {
   const supabase = await createClient()
@@ -37,6 +38,26 @@ export async function POST() {
       .map((r) => [r.merchant_entity_id, r.category])
   )
 
+  // Learn from categories you've picked by hand: a new transaction whose
+  // payer/merchant name matches one you categorized gets the same category.
+  // This catches things like payroll deposits that have no merchant id.
+  const learned = new Map<string, string>()
+  for (let from = 0; ; from += 1000) {
+    const { data } = await supabase
+      .from('transactions')
+      .select('merchant_name, description, category')
+      .eq('user_id', user.id)
+      .eq('category_source', 'manual')
+      .not('category', 'is', null)
+      .order('txn_date', { ascending: false })
+      .range(from, from + 999)
+    for (const t of data || []) {
+      const k = matchKey(t.merchant_name, t.description)
+      if (k && !learned.has(k)) learned.set(k, t.category)
+    }
+    if (!data || data.length < 1000) break
+  }
+
   let tier1 = 0
   let tier2 = 0
   const tier3Candidates: { id: string; merchant_name: string | null; description: string | null }[] = []
@@ -46,6 +67,16 @@ export async function POST() {
       await supabase
         .from('transactions')
         .update({ category: ruleMap.get(t.merchant_entity_id), category_source: 'rule' })
+        .eq('id', t.id)
+      tier1++
+      continue
+    }
+
+    const learnedCategory = learned.get(matchKey(t.merchant_name, t.description))
+    if (learnedCategory) {
+      await supabase
+        .from('transactions')
+        .update({ category: learnedCategory, category_source: 'rule' })
         .eq('id', t.id)
       tier1++
       continue

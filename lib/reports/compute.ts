@@ -14,7 +14,7 @@ export function classify(t: Txn): 'income' | 'expense' | 'skip' {
     })
   )
     return 'skip'
-  if (t.category === 'INCOME') return 'income'
+  if (t.category === 'INCOME' || t.category === 'PAYCHECK') return 'income'
   if (!t.category) return t.amount < 0 ? 'income' : 'expense'
   return 'expense'
 }
@@ -35,6 +35,8 @@ export const INCOME_SOURCE_LIST = [
 ]
 
 export function incomeSource(t: Txn) {
+  // You marked it as a paycheck in Transactions
+  if (t.category === 'PAYCHECK') return { key: 'INCOME_WAGES', ...INCOME_SOURCES.INCOME_WAGES }
   const s = t.plaidDetail ? INCOME_SOURCES[t.plaidDetail] : undefined
   return s ? { key: t.plaidDetail!, ...s } : { key: 'OTHER_INCOME', label: 'Other Income', emoji: '💵' }
 }
