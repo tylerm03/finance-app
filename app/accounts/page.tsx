@@ -2,7 +2,7 @@ import AccountsView from './accounts-view'
 import { loadAccounts } from './load'
 
 export default async function AccountsPage() {
-  const { data, error } = await loadAccounts()
+  const { data, error, schwab } = await loadAccounts()
 
   if (error) {
     return (
@@ -12,5 +12,5 @@ export default async function AccountsPage() {
     )
   }
 
-  return <AccountsView data={data} />
+  return <AccountsView data={data} schwab={schwab.status} />
 }

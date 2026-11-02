@@ -56,7 +56,7 @@ export default async function Dashboard() {
     loadAccounts(raw),
     loadBudget(undefined, transactions),
     supabase.from('recurring_marks').select('id, merchant_key, merchant, day, amount, category, start_date'),
-    supabase.from('holdings').select('institution_value, securities(name, ticker_symbol)'),
+    supabase.from('holdings').select('account_id, institution_value, securities(name, ticker_symbol)'),
     supabase.auth.getUser(),
   ])
 
@@ -65,12 +65,22 @@ export default async function Dashboard() {
 
   // Combine the same security held in several accounts
   const byHolding = new Map<string, Holding>()
+  const hidden = new Set(accounts.hiddenAccountIds)
   for (const h of holdingsRes.data || []) {
+    if (hidden.has(h.account_id)) continue
     const sec = (Array.isArray(h.securities) ? h.securities[0] : h.securities) as { name?: string; ticker_symbol?: string } | null
     const key = sec?.ticker_symbol || sec?.name || 'Other'
     const cur = byHolding.get(key) || { key, ticker: sec?.ticker_symbol || null, name: sec?.name || key, value: 0 }
     cur.value += Number(h.institution_value || 0)
     byHolding.set(key, cur)
+  }
+  // Live Schwab positions replace Plaid's day-old copies
+  if (accounts.usingSchwab) {
+    for (const p of accounts.schwab.positions) {
+      const cur = byHolding.get(p.symbol) || { key: p.symbol, ticker: p.symbol, name: p.description || p.symbol, value: 0 }
+      cur.value += p.market_value
+      byHolding.set(p.symbol, cur)
+    }
   }
   const investmentsTotal = accounts.data.groups
     .filter((g) => g.key === 'investments')
@@ -99,6 +109,8 @@ export default async function Dashboard() {
     streams,
     holdings: [...byHolding.values()].sort((a, b) => b.value - a.value).slice(0, 8),
     investmentsTotal,
+    investmentsDayChange: accounts.usingSchwab ? accounts.schwab.accounts.reduce((sum, a) => sum + a.day_change, 0) : null,
+    schwab: accounts.schwab.status,
     error: error || accounts.error,
   }
 

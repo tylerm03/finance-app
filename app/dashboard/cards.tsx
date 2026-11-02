@@ -420,7 +420,7 @@ export function RecurringCard({ streams }: { streams: Stream[] }) {
 
 /* ---------------- Investments ---------------- */
 
-export function InvestmentsCard({ total, holdings }: { total: number; holdings: Holding[] }) {
+export function InvestmentsCard({ total, dayChange, holdings }: { total: number; dayChange: number | null; holdings: Holding[] }) {
   const sum = holdings.reduce((s, h) => s + h.value, 0) || 1
   return (
     <section className={CARD}>
@@ -429,6 +429,25 @@ export function InvestmentsCard({ total, holdings }: { total: number; holdings: 
           <Link href="/accounts" className="hover:underline">
             {formatMoney(total)} investments
           </Link>
+        }
+        subtitle={
+          dayChange !== null ? (
+            <span className="inline-flex items-center gap-2">
+              <span className={'inline-flex items-center gap-1 ' + (dayChange >= 0 ? GREEN : RED)}>
+                {dayChange >= 0 ? <ArrowUp size={15} strokeWidth={2.5} /> : <ArrowDown size={15} strokeWidth={2.5} />}
+                {formatMoney(Math.abs(dayChange))} ({((dayChange / Math.max(1, total - dayChange)) * 100).toFixed(1)}%)
+              </span>
+              Today
+            </span>
+          ) : undefined
+        }
+        right={
+          dayChange !== null ? (
+            <span className="flex items-center gap-1.5 text-[13px] font-medium text-[#2e8f57]">
+              <span className="h-2 w-2 animate-pulse rounded-full bg-[#2e9e64]" />
+              Live from Schwab
+            </span>
+          ) : undefined
         }
       />
       <p className="bg-[#f4f3f1] px-5 py-2.5 text-[14px] text-[#5f5b55]">Top holdings</p>

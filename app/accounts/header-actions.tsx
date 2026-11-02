@@ -16,6 +16,8 @@ export default function HeaderActions() {
     setRefreshing(true)
     setMessage(null)
     try {
+      // Schwab first (live), then Plaid for everything else
+      await fetch('/api/schwab/refresh', { method: 'POST' }).catch(() => null)
       const balances = await fetch('/api/plaid/balances', { method: 'POST' }).then((r) => r.json())
       const investments = await fetch('/api/plaid/investments', { method: 'POST' }).then((r) => r.json())
       const errors = (balances.errors?.length || 0) + (investments.errors?.length || 0)

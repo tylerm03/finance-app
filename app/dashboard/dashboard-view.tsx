@@ -4,6 +4,7 @@ import { useEffect, useRef, useState, useSyncExternalStore } from 'react'
 import { LayoutGrid } from 'lucide-react'
 import { BudgetCard, CARD, InvestmentsCard, NetWorthCard, RecurringCard, SpendingCard, TransactionsCard } from './cards'
 import type { DashboardData } from './types'
+import SchwabBanner from '../schwab-banner'
 
 const WIDGETS = [
   ['budget', 'Budget'],
@@ -91,7 +92,7 @@ export default function DashboardView({ data }: { data: DashboardData }) {
     show('spending') && <SpendingCard key="spending" s={data.spending} />,
     show('transactions') && <TransactionsCard key="transactions" recent={data.recent} merchants={data.merchants} />,
     show('recurring') && <RecurringCard key="recurring" streams={data.streams} />,
-    show('investments') && <InvestmentsCard key="investments" total={data.investmentsTotal} holdings={data.holdings} />,
+    show('investments') && <InvestmentsCard key="investments" total={data.investmentsTotal} dayChange={data.investmentsDayChange} holdings={data.holdings} />,
   ].filter(Boolean)
 
   return (
@@ -103,6 +104,9 @@ export default function DashboardView({ data }: { data: DashboardData }) {
 
       <div className="px-4 pb-8">
         {data.error && <p className={CARD + ' mb-4 p-5 text-[15px] text-[#d6402b]'}>{data.error}</p>}
+        <div className="mb-4 empty:hidden">
+          <SchwabBanner status={data.schwab} />
+        </div>
         <div className="grid grid-cols-1 items-start gap-4 xl:grid-cols-2">
           <div className="space-y-4">{left}</div>
           <div className="space-y-4">{right}</div>

@@ -7,6 +7,8 @@ import type { AccountGroup, AccountRow, AccountsData } from '@/lib/accounts/buil
 import NetWorthChart from './net-worth-chart'
 import Sparkline from './sparkline'
 import HeaderActions from './header-actions'
+import SchwabBanner from '../schwab-banner'
+import type { SchwabStatus } from '@/lib/schwab/server'
 
 const RANGES = [
   { key: '1m', label: '1 month', days: 30 },
@@ -239,7 +241,7 @@ function Select<T extends string>({
   )
 }
 
-export default function AccountsView({ data }: { data: AccountsData }) {
+export default function AccountsView({ data, schwab }: { data: AccountsData; schwab?: SchwabStatus }) {
   const [range, setRange] = useState<RangeKey>('1m')
   const [metric, setMetric] = useState<MetricKey>('net_worth')
   const [summaryMode, setSummaryMode] = useState<'totals' | 'percent'>('totals')
@@ -282,6 +284,7 @@ export default function AccountsView({ data }: { data: AccountsData }) {
       </header>
 
       <div className="space-y-4 px-4 pb-8">
+        {schwab && <SchwabBanner status={schwab} />}
         {/* Net worth */}
         <section className="rounded-xl bg-white px-6 pb-5 pt-6 shadow-[0_1px_3px_rgba(30,25,20,0.06)]">
           <div className="flex flex-wrap items-start justify-between gap-4">
