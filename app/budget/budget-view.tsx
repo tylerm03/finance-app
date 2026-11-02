@@ -72,7 +72,12 @@ function Row({ row, onSave, disabled }: { row: BudgetRow; onSave: (key: string, 
       <div className={COLS + ' items-center'}>
         <div className="flex h-[49px] min-w-0 items-center gap-3 border-r border-[#efedea] px-5">
           <span className="w-5 shrink-0 text-center text-[16px] leading-none">{row.emoji}</span>
-          <span className="truncate text-[15px] text-[#1f1d1a]">{row.label}</span>
+          <span className="min-w-0">
+            <span className="block truncate text-[15px] text-[#1f1d1a]">{row.label}</span>
+            {row.autofillFrom && (
+              <span className="block truncate text-[12px] text-[#8a8680]">Filled from {row.autofillFrom}&apos;s income</span>
+            )}
+          </span>
         </div>
         <div className="flex justify-end pr-4">
           <BudgetInput value={row.budget} disabled={disabled} onSave={(v) => onSave(row.key, v)} />
@@ -195,13 +200,13 @@ export default function BudgetView({ data }: { data: BudgetData }) {
   const [saveError, setSaveError] = useState<string | null>(null)
 
   const rows = useMemo(
-    () => data.rows.map((r) => (r.key in overrides ? { ...r, budget: overrides[r.key] } : r)),
+    () => data.rows.map((r) => (r.key in overrides ? { ...r, budget: overrides[r.key], autofillFrom: null } : r)),
     [data.rows, overrides]
   )
   const incomeRows = rows.filter((r) => r.kind === 'income')
   const expenseRows = rows.filter((r) => r.kind === 'expense')
   // Nothing budgeted yet: show every category so there's something to fill in
-  const firstTime = !data.rows.some((r) => r.budget)
+  const firstTime = !data.rows.some((r) => r.budget && !r.autofillFrom)
   const disabled = data.setupNeeded
 
   async function save(key: string, amount: number) {

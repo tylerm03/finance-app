@@ -8,6 +8,7 @@ export type BudgetRow = {
   emoji: string
   budget: number | null // null = never budgeted
   actual: number
+  autofillFrom: string | null // e.g. "October" when the budget is last month's actual income
 }
 
 export type BudgetData = {

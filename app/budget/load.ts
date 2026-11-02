@@ -21,13 +21,19 @@ export async function loadBudget(monthParam?: string, given?: Txn[]): Promise<Bu
   const daysInMonth = new Date(y, m, 0).getDate()
   const monthStart = month + '-01'
   const monthEnd = month + '-' + pad(daysInMonth)
+  // Last month, whose actual income fills in this month's income budget
+  const prev = new Date(y, m - 2, 1)
+  const prevMonth = prev.getFullYear() + '-' + pad(prev.getMonth() + 1)
+  const prevStart = prevMonth + '-01'
+  const prevEnd = prevMonth + '-' + pad(new Date(prev.getFullYear(), prev.getMonth() + 1, 0).getDate())
+  const prevName = prev.toLocaleDateString('en-US', { month: 'long' })
 
   const elapsed =
     month < thisMonth ? 1 : month > thisMonth ? 0 : (now.getDate() - 1 + now.getHours() / 24) / daysInMonth
 
   const supabase = await createClient()
   const [loaded, budgetsRes, groupsRes] = await Promise.all([
-    given ? Promise.resolve({ transactions: given, error: null }) : loadTransactions({ from: monthStart, to: monthEnd }, 20000),
+    given ? Promise.resolve({ transactions: given, error: null }) : loadTransactions({ from: prevStart, to: monthEnd }, 20000),
     supabase
       .from('budgets')
       .select('month, category, amount')
@@ -44,8 +50,10 @@ export async function loadBudget(monthParam?: string, given?: Txn[]): Promise<Bu
 
   // This month's budget, or the most recent earlier month's if this one isn't set yet
   const budgetByKey = new Map<string, number>()
+  const setThisMonth = new Set<string>() // amounts you typed for this exact month
   for (const b of budgetsRes.data || []) {
     if (!budgetByKey.has(b.category)) budgetByKey.set(b.category, Number(b.amount))
+    if (b.month === monthStart) setThisMonth.add(b.category)
   }
 
   const groupByCategory = new Map<string, BudgetGroup>()
@@ -53,10 +61,15 @@ export async function loadBudget(monthParam?: string, given?: Txn[]): Promise<Bu
 
   const { transactions, error } = loaded
   const actualByKey = new Map<string, number>()
+  const prevIncomeByKey = new Map<string, number>()
   for (const t of transactions) {
-    if (t.date < monthStart || t.date > monthEnd) continue
     const kind = classify(t)
     if (kind === 'skip') continue
+    if (kind === 'income' && t.date >= prevStart && t.date <= prevEnd) {
+      const key = 'income:' + incomeSource(t).key
+      prevIncomeByKey.set(key, (prevIncomeByKey.get(key) || 0) - t.amount)
+    }
+    if (t.date < monthStart || t.date > monthEnd) continue
     const key = kind === 'income' ? 'income:' + incomeSource(t).key : expenseGroup(t).key
     actualByKey.set(key, (actualByKey.get(key) || 0) + (kind === 'income' ? -t.amount : t.amount))
   }
@@ -64,14 +77,18 @@ export async function loadBudget(monthParam?: string, given?: Txn[]): Promise<Bu
   const rows: BudgetRow[] = [
     ...INCOME_SOURCE_LIST.map((s) => {
       const key = 'income:' + s.key
+      // Income budget = what actually came in last month, unless you typed an amount for this month
+      const last = Math.round(prevIncomeByKey.get(key) || 0)
+      const autofill = !setThisMonth.has(key)
       return {
         key,
         kind: 'income' as const,
         group: 'income' as const,
         label: s.label,
         emoji: s.emoji,
-        budget: budgetByKey.has(key) ? budgetByKey.get(key)! : null,
+        budget: autofill ? (last > 0 ? last : null) : budgetByKey.get(key)!,
         actual: actualByKey.get(key) || 0,
+        autofillFrom: autofill && last > 0 ? prevName : null,
       }
     }),
     ...[...BUDGET_EXPENSE_CATEGORIES, '__none__'].map((c) => {
@@ -84,6 +101,7 @@ export async function loadBudget(monthParam?: string, given?: Txn[]): Promise<Bu
         emoji: d.emoji,
         budget: budgetByKey.has(c) ? budgetByKey.get(c)! : null,
         actual: actualByKey.get(c) || 0,
+        autofillFrom: null,
       }
     }),
   ]
