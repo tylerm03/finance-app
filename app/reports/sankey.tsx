@@ -63,6 +63,7 @@ function Label({
   title,
   value,
   pct,
+  underline = false,
 }: {
   x: number
   y: number
@@ -70,10 +71,11 @@ function Label({
   title: string
   value: number
   pct: number
+  underline?: boolean
 }) {
   return (
     <text x={x} y={y} textAnchor={anchor} style={{ fontFamily: 'inherit' }}>
-      <tspan x={x} dy="-0.35em" fontSize={14} fill="#4a4641">
+      <tspan x={x} dy="-0.35em" fontSize={14} fill="#4a4641" textDecoration={underline ? 'underline' : undefined}>
         {title}
       </tspan>
       <tspan x={x} dy="1.35em" fontSize={16} fontWeight={600} fill="#1f1d1a">
@@ -88,11 +90,14 @@ export default function Sankey({
   expenseSlices,
   income,
   expenses,
+  onSelectExpense,
 }: {
   incomeSlices: Slice[]
   expenseSlices: Slice[]
   income: number
   expenses: number
+  // Clicking a spending stream: the category keys it covers, its label and emoji
+  onSelectExpense?: (keys: string[], label: string, emoji: string) => void
 }) {
   const { ref, width } = useWidth<HTMLDivElement>()
   const [hover, setHover] = useState<string | null>(null)
@@ -159,6 +164,16 @@ export default function Sankey({
 
   const dim = (key: string) => (hover && hover !== key ? 0.35 : 1)
 
+  // Spending streams open the list of charges behind them
+  const clickable = (key: string) => !!onSelectExpense && key.startsWith('ex-')
+  function select(key: string) {
+    if (!clickable(key)) return
+    const node = right.find((n) => n.key === key)
+    if (!node) return
+    const keys = key === 'ex-rest' ? expenseSlices.slice(11).map((s) => s.key) : [key.slice(3)]
+    onSelectExpense!(keys, node.label, node.emoji || '')
+  }
+
   return (
     <div ref={ref} className="w-full">
       <svg width={width} height={height} viewBox={'0 0 ' + width + ' ' + height} className="block" data-chart="sankey">
@@ -182,7 +197,16 @@ export default function Sankey({
         {/* Income block between the blue and green bars */}
         <rect x={x1 + BAR} y={0} width={x2 - x1 - BAR} height={midH} fill="url(#sankeyMid)" />
         {outLinks.map((l) => (
-          <path key={l.key} d={l.d} fill={'url(#sk-' + l.key + ')'} opacity={dim(l.key)} onMouseEnter={() => setHover(l.key)} onMouseLeave={() => setHover(null)} />
+          <path
+            key={l.key}
+            d={l.d}
+            fill={'url(#sk-' + l.key + ')'}
+            opacity={dim(l.key)}
+            onMouseEnter={() => setHover(l.key)}
+            onMouseLeave={() => setHover(null)}
+            onClick={() => select(l.key)}
+            className={clickable(l.key) ? 'cursor-pointer' : ''}
+          />
         ))}
 
         {left.map((n) => (
@@ -204,7 +228,22 @@ export default function Sankey({
         <Label x={x1 + BAR + 16} y={midH / 2} anchor="start" title="Income" value={income} pct={income > 0 ? 100 : 0} />
 
         {right.map((n) => (
-          <g key={n.key} opacity={dim(n.key)}>
+          <g
+            key={n.key}
+            opacity={dim(n.key)}
+            onMouseEnter={() => setHover(n.key)}
+            onMouseLeave={() => setHover(null)}
+            onClick={() => select(n.key)}
+            onKeyDown={(e) => e.key === 'Enter' && select(n.key)}
+            role={clickable(n.key) ? 'button' : undefined}
+            tabIndex={clickable(n.key) ? 0 : undefined}
+            aria-label={clickable(n.key) ? 'Show charges for ' + n.label : undefined}
+            className={clickable(n.key) ? 'cursor-pointer outline-none' : ''}
+          >
+            {/* Invisible hit area so the whole label block is clickable */}
+            {clickable(n.key) && (
+              <rect x={x2 + BAR + 40} y={n.y} width={x3 + BAR - (x2 + BAR + 40)} height={Math.max(n.h, MIN_SLOT)} fill="transparent" />
+            )}
             <rect x={x3} y={n.y} width={BAR} height={n.h} fill={n.color} />
             <Label
               x={x3 - 16}
@@ -213,6 +252,7 @@ export default function Sankey({
               title={(n.emoji ? n.emoji + ' ' : '') + n.label}
               value={n.value}
               pct={n.pct}
+              underline={clickable(n.key) && hover === n.key}
             />
           </g>
         ))}

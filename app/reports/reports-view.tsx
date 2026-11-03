@@ -4,7 +4,7 @@ import { useMemo, useRef, useState } from 'react'
 import { Check, ChevronDown, ChevronRight, Download } from 'lucide-react'
 import { formatMoney } from '@/lib/format'
 import { categoryDisplay } from '@/lib/categorization/category-display'
-import { buildReport, buildSeries, classify, type Period, type Slice } from '@/lib/reports/compute'
+import { buildReport, buildSeries, classify, expenseGroup, incomeSource, type Period, type Slice } from '@/lib/reports/compute'
 import InstitutionAvatar from '../institution-avatar'
 import { BTN, DateButton, FiltersButton, presets } from '../transactions/top-bar'
 import { MerchantLogo } from '../transactions/transactions-view'
@@ -14,6 +14,7 @@ import Sankey from './sankey'
 import TrendBars, { type BarMode, type Tab } from './trend-bars'
 import ViewPicker, { type PickerOption } from './view-picker'
 import { downloadSummaryPng, downloadSvgAsPng } from './download'
+import ChargesModal from './charges-modal'
 
 const CARD = 'rounded-xl bg-white shadow-[0_1px_3px_rgba(30,25,20,0.06)]'
 const GREEN_TEXT = 'text-[#2e8f57]'
@@ -99,7 +100,17 @@ function Kpi({ value, label, color }: { value: string; label: string; color?: st
   )
 }
 
-function BreakdownSection({ title, slices, tone }: { title: string; slices: Slice[]; tone: 'green' | 'red' }) {
+function BreakdownSection({
+  title,
+  slices,
+  tone,
+  onSelect,
+}: {
+  title: string
+  slices: Slice[]
+  tone: 'green' | 'red'
+  onSelect: (s: Slice) => void
+}) {
   const max = slices[0]?.value || 1
   const fill = tone === 'green' ? '#cde9d8' : '#f7cfd3'
   const edge = tone === 'green' ? '#a9d8bd' : '#efb0b7'
@@ -109,19 +120,24 @@ function BreakdownSection({ title, slices, tone }: { title: string; slices: Slic
       {slices.length === 0 && <p className="text-[15px] text-[#77736d]">Nothing in this range.</p>}
       <div className="space-y-1.5">
         {slices.map((s) => (
-          <div key={s.key} className="group relative flex h-11 items-center justify-between rounded-md px-3">
+          <button
+            key={s.key}
+            type="button"
+            onClick={() => onSelect(s)}
+            className="group relative flex h-11 w-full items-center justify-between rounded-md px-3 text-left"
+          >
             <span
               className="absolute inset-y-0 left-0 rounded-md transition-[filter] group-hover:brightness-95"
               style={{ width: Math.max((s.value / max) * 100, 0.6) + '%', backgroundColor: fill, borderLeft: '3px solid ' + edge }}
             />
             <span className="relative flex min-w-0 items-center gap-2.5 text-[15px] text-[#1f1d1a]">
               <span className="text-[16px] leading-none">{s.emoji}</span>
-              <span className="truncate">{s.label}</span>
+              <span className="truncate group-hover:underline">{s.label}</span>
             </span>
             <span className="relative shrink-0 pl-4 text-[15px] tabular-nums text-[#1f1d1a]">
               {formatMoney(s.value)} <span className="text-[#8a8680]">({s.pct.toFixed(1)}%)</span>
             </span>
-          </div>
+          </button>
         ))}
       </div>
     </div>
@@ -272,6 +288,14 @@ export default function ReportsView({
   const [groupBy, setGroupBy] = useState<'category' | 'merchant'>('category')
   const [sort, setSort] = useState<SortKey>('date_desc')
   const [editing, setEditing] = useState<Txn | null>(null)
+  // The stream / bar whose charges are shown in the pop-up
+  const [charges, setCharges] = useState<{
+    label: string
+    emoji: string
+    kind: 'income' | 'expense'
+    by: 'category' | 'merchant'
+    keys: string[]
+  } | null>(null)
   const chartRef = useRef<HTMLDivElement>(null)
 
   const report = useMemo(() => buildReport(transactions), [transactions])
@@ -313,6 +337,28 @@ export default function ReportsView({
   }, [report, tab, sort])
 
   const merchants = useMemo(() => [...new Set(transactions.map((t) => t.merchant))].sort(), [transactions])
+
+  // Charges behind the clicked stream or bar
+  const chargeTxns = useMemo(() => {
+    if (!charges) return []
+    return report.included.filter((t) => {
+      if (classify(t) !== charges.kind) return false
+      if (charges.by === 'merchant') return charges.keys.includes(t.merchant)
+      const key = charges.kind === 'income' ? incomeSource(t).key : expenseGroup(t).key
+      return charges.keys.includes(key)
+    })
+  }, [charges, report])
+
+  // Link to the same transactions on the Transactions page (one spending category only)
+  const chargesHref = (() => {
+    if (!charges || charges.kind !== 'expense' || charges.by !== 'category' || charges.keys.length !== 1) return null
+    const q = new URLSearchParams()
+    q.set('category', charges.keys[0] === '__none__' ? '__uncategorized__' : charges.keys[0])
+    if (params.from) q.set('from', params.from)
+    if (params.to) q.set('to', params.to)
+    if (params.account) q.set('account', params.account)
+    return '/transactions?' + q.toString()
+  })()
 
   // KPI cards and summary rows for each tab
   const expenseCount = report.included.filter((t) => classify(t) === 'expense').length
@@ -453,7 +499,13 @@ export default function ReportsView({
           </div>
           <div ref={chartRef}>
             {activeChart === 'sankey' ? (
-              <Sankey incomeSlices={report.incomeSlices} expenseSlices={report.expenseSlices} income={report.income} expenses={report.expenses} />
+              <Sankey
+                incomeSlices={report.incomeSlices}
+                expenseSlices={report.expenseSlices}
+                income={report.income}
+                expenses={report.expenses}
+                onSelectExpense={(keys, label, emoji) => setCharges({ label, emoji, kind: 'expense', by: 'category', keys })}
+              />
             ) : (
               <TrendBars data={series} tab={tab} mode={barMode} />
             )}
@@ -481,8 +533,22 @@ export default function ReportsView({
 
             {lower === 'breakdown' ? (
               <div className="px-6 pb-2">
-                {tab !== 'spending' && <BreakdownSection title="Income" slices={incomeSlices} tone="green" />}
-                {tab !== 'income' && <BreakdownSection title="Expenses" slices={expenseSlices} tone="red" />}
+                {tab !== 'spending' && (
+                  <BreakdownSection
+                    title="Income"
+                    slices={incomeSlices}
+                    tone="green"
+                    onSelect={(sl) => setCharges({ label: sl.label, emoji: sl.emoji, kind: 'income', by: groupBy, keys: [sl.key] })}
+                  />
+                )}
+                {tab !== 'income' && (
+                  <BreakdownSection
+                    title="Expenses"
+                    slices={expenseSlices}
+                    tone="red"
+                    onSelect={(sl) => setCharges({ label: sl.label, emoji: sl.emoji, kind: 'expense', by: groupBy, keys: [sl.key] })}
+                  />
+                )}
               </div>
             ) : (
               <TransactionList txns={listTxns} onOpen={setEditing} />
@@ -525,6 +591,18 @@ export default function ReportsView({
         </div>
       </div>
 
+      {charges && (
+        <ChargesModal
+          title={charges.label}
+          emoji={charges.by === 'category' ? charges.emoji : ''}
+          subtitle={label}
+          kind={charges.kind}
+          txns={chargeTxns}
+          href={chargesHref}
+          onClose={() => setCharges(null)}
+          onOpenTxn={setEditing}
+        />
+      )}
       {editing && (
         <EditDrawer txns={[editing]} merchants={merchants} onClose={() => setEditing(null)} onDone={() => setEditing(null)} />
       )}
