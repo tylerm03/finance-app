@@ -69,6 +69,16 @@ export type AccountRow = {
   updatedLabel: string
   // Daily end-of-day balances, aligned with AccountsData.dates
   series: number[]
+  // What an investment account holds, biggest first (empty for other accounts)
+  holdings?: AccountHolding[]
+}
+
+export type AccountHolding = {
+  symbol: string | null
+  name: string
+  quantity: number | null
+  value: number
+  dayChange: number | null // only for live Schwab positions
 }
 
 export type AccountGroup = {

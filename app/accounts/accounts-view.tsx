@@ -114,6 +114,106 @@ function Avatar({ row }: { row: AccountRow }) {
   )
 }
 
+function HoldingsPanel({ row }: { row: AccountRow }) {
+  const [all, setAll] = useState(false)
+  const list = row.holdings || []
+  const shown = all ? list : list.slice(0, 5)
+  const total = list.reduce((sum, h) => sum + h.value, 0) || 1
+
+  return (
+    <div className="border-t border-[#efedea] bg-[#faf9f7] px-5 pb-3 pt-3">
+      <p className="mb-1 pl-14 text-[13px] font-medium uppercase tracking-[0.08em] text-[#77736d]">Top holdings</p>
+      {shown.map((h, i) => (
+        <div key={(h.symbol || h.name) + i} className="flex items-center gap-4 py-2.5 pl-14">
+          <span className="flex h-8 min-w-14 items-center justify-center rounded-md bg-white px-2 text-[12px] font-semibold text-[#3b3834] ring-1 ring-[#ebe9e5]">
+            {(h.symbol || h.name).slice(0, 6).toUpperCase()}
+          </span>
+          <div className="min-w-0 flex-1">
+            <p className="truncate text-[15px] text-[#1f1d1a]">{h.name}</p>
+            <div className="mt-1 flex items-center gap-3">
+              <div className="h-1.5 w-full max-w-[160px] overflow-hidden rounded-full bg-[#ecebe8]">
+                <div className="h-full rounded-full bg-[#7dd8f6]" style={{ width: (h.value / total) * 100 + '%' }} />
+              </div>
+              <span className="shrink-0 text-[13px] text-[#77736d]">
+                {((h.value / total) * 100).toFixed(1)}%
+                {h.quantity !== null && ' · ' + +h.quantity.toFixed(4) + (h.quantity === 1 ? ' share' : ' shares')}
+              </span>
+            </div>
+          </div>
+          <div className="w-[150px] shrink-0 text-right">
+            <p className="text-[15px] tabular-nums text-[#1f1d1a]">{formatMoney(h.value)}</p>
+            {h.dayChange !== null && Math.abs(h.dayChange) >= 0.005 && (
+              <p className={'text-[13px] tabular-nums ' + (h.dayChange >= 0 ? GOOD : BAD)}>
+                {h.dayChange >= 0 ? '+' : '-'}
+                {formatMoney(Math.abs(h.dayChange))} today
+              </p>
+            )}
+          </div>
+          <span className="w-4 shrink-0" />
+        </div>
+      ))}
+      {list.length > 5 && (
+        <button
+          type="button"
+          onClick={() => setAll(!all)}
+          className="ml-14 mt-1 text-[14px] font-medium text-orange-500 hover:text-orange-600"
+        >
+          {all ? 'Show top 5' : 'Show all ' + list.length + ' holdings'}
+        </button>
+      )}
+    </div>
+  )
+}
+
+// One account. Investment accounts with holdings open a dropdown of what they hold.
+function AccountLine({ row, from, to }: { row: AccountRow; from: number; to: number }) {
+  const [open, setOpen] = useState(false)
+  const expandable = !!row.holdings?.length
+
+  const content = (
+    <>
+      <Avatar row={row} />
+      <div className="min-w-0 flex-1">
+        <p className="truncate text-[16px] text-[#1f1d1a]">{row.name}</p>
+        <p className="truncate text-[14px] text-[#77736d]">
+          {row.subtitle}
+          {expandable && ' · ' + row.holdings!.length + (row.holdings!.length === 1 ? ' holding' : ' holdings')}
+        </p>
+      </div>
+      <div className="hidden w-[132px] shrink-0 md:block">
+        <Sparkline values={row.series.slice(from, to + 1)} />
+      </div>
+      <div className="w-[150px] shrink-0 text-right">
+        <p className="text-[16px] tabular-nums text-[#1f1d1a]">{formatMoney(row.balance)}</p>
+        <p className="text-[14px] text-[#77736d]">{row.updatedLabel}</p>
+      </div>
+      {expandable ? (
+        <ChevronDown size={16} strokeWidth={2.25} className={'w-4 shrink-0 text-[#77736d] transition-transform ' + (open ? 'rotate-180' : '')} />
+      ) : (
+        <span className="w-4 shrink-0" />
+      )}
+    </>
+  )
+
+  return (
+    <div className="border-t border-[#efedea]">
+      {expandable ? (
+        <button
+          type="button"
+          onClick={() => setOpen(!open)}
+          aria-expanded={open}
+          className="flex w-full items-center gap-4 px-5 py-4 text-left hover:bg-[#faf9f7]"
+        >
+          {content}
+        </button>
+      ) : (
+        <div className="flex items-center gap-4 px-5 py-4">{content}</div>
+      )}
+      {open && <HoldingsPanel row={row} />}
+    </div>
+  )
+}
+
 function GroupCard({
   group,
   from,
@@ -153,22 +253,7 @@ function GroupCard({
       </button>
 
       {open &&
-        group.accounts.map((row) => (
-          <div key={row.id} className="flex items-center gap-4 border-t border-[#efedea] px-5 py-4">
-            <Avatar row={row} />
-            <div className="min-w-0 flex-1">
-              <p className="truncate text-[16px] text-[#1f1d1a]">{row.name}</p>
-              <p className="truncate text-[14px] text-[#77736d]">{row.subtitle}</p>
-            </div>
-            <div className="hidden w-[132px] shrink-0 md:block">
-              <Sparkline values={row.series.slice(from, to + 1)} />
-            </div>
-            <div className="w-[150px] shrink-0 text-right">
-              <p className="text-[16px] tabular-nums text-[#1f1d1a]">{formatMoney(row.balance)}</p>
-              <p className="text-[14px] text-[#77736d]">{row.updatedLabel}</p>
-            </div>
-          </div>
-        ))}
+        group.accounts.map((row) => <AccountLine key={row.id} row={row} from={from} to={to} />)}
     </section>
   )
 }

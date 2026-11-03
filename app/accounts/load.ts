@@ -1,5 +1,5 @@
 import { createClient } from '@/lib/supabase/server'
-import { buildAccountsData, HISTORY_DAYS, type AccountsData, type RawAccount, type RawTxn } from '@/lib/accounts/build'
+import { buildAccountsData, HISTORY_DAYS, type AccountHolding, type AccountsData, type RawAccount, type RawTxn } from '@/lib/accounts/build'
 import { isPlaidSchwabBrokerage, loadSchwab, schwabAccountName, type SchwabData } from '@/lib/schwab/server'
 import { loadBankBrands } from '@/lib/plaid/logos'
 
@@ -27,7 +27,7 @@ export async function loadAccounts(transactions?: RawTxn[]): Promise<LoadedAccou
 
   const [accountsRes, holdingsRes, itemsRes, assetsRes, schwab, brands] = await Promise.all([
     supabase.from('accounts').select('id, name, type, subtype, current_balance, balance_updated_at, plaid_item_id'),
-    supabase.from('holdings').select('account_id, institution_value'),
+    supabase.from('holdings').select('account_id, institution_value, quantity, securities(name, ticker_symbol)'),
     supabase.from('plaid_items').select('plaid_item_id, institution_name'),
     supabase.from('assets').select('id, name, type, trim, current_value, value_updated_at'),
     loadSchwab(supabase),
@@ -99,6 +99,37 @@ export async function loadAccounts(transactions?: RawTxn[]): Promise<LoadedAccou
     logoByItem,
     assets: assetsRes.data || [],
   })
+
+  // Each investment account's holdings: Plaid's for Plaid accounts, live positions for Schwab
+  const holdingsFor = new Map<string, AccountHolding[]>()
+  const add = (id: string, h: AccountHolding) => holdingsFor.set(id, [...(holdingsFor.get(id) || []), h])
+  for (const h of holdingsRes.data || []) {
+    const sec = (Array.isArray(h.securities) ? h.securities[0] : h.securities) as { name?: string; ticker_symbol?: string } | null
+    add(h.account_id, {
+      symbol: sec?.ticker_symbol || null,
+      name: sec?.name || sec?.ticker_symbol || 'Unknown',
+      quantity: h.quantity === null || h.quantity === undefined ? null : Number(h.quantity),
+      value: Number(h.institution_value || 0),
+      dayChange: null,
+    })
+  }
+  if (usingSchwab) {
+    for (const p of schwab.positions) {
+      add('schwab-' + p.account_hash, {
+        symbol: p.symbol,
+        name: p.description || p.symbol,
+        quantity: p.quantity,
+        value: p.market_value,
+        dayChange: p.day_change,
+      })
+    }
+  }
+  for (const g of data.groups) {
+    for (const a of g.accounts) {
+      const list = holdingsFor.get(a.id)
+      if (list?.length) a.holdings = [...list].sort((x, y) => y.value - x.value)
+    }
+  }
 
   const err = accountsRes.error || holdingsRes.error || assetsRes.error
   return { data, error: err ? err.message : null, schwab, usingSchwab, hiddenAccountIds }
