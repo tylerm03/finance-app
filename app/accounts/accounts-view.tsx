@@ -131,8 +131,8 @@ function GroupCard({
         />
         <span className="flex min-w-0 flex-1 flex-wrap items-center gap-x-3 gap-y-1">
           <span className="text-[17px] font-medium text-[#1f1d1a]">{group.label}</span>
-          {/* Card balances swing with every statement, so the change isn't shown for them */}
-          {group.key !== 'credit' && (
+          {/* Cash and card balances swing with every paycheck and statement, so no change line for them */}
+          {group.key !== 'credit' && group.key !== 'cash' && (
             <Change start={series[0]} end={series[series.length - 1]} kind={group.kind} periodLabel={periodLabel} />
           )}
         </span>
