@@ -83,6 +83,17 @@ function Avatar({ row }: { row: AccountRow }) {
       </div>
     )
   }
+  if (row.logo) {
+    return (
+      // eslint-disable-next-line @next/next/no-img-element
+      <img
+        src={row.logo}
+        alt={row.institution}
+        title={row.institution}
+        className="h-10 w-10 shrink-0 rounded-full border border-[#efedea] bg-white object-contain"
+      />
+    )
+  }
   const name = row.institution
   let hash = 0
   for (const c of name) hash = (hash * 31 + c.charCodeAt(0)) >>> 0

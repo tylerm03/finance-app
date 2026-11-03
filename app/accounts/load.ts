@@ -1,6 +1,7 @@
 import { createClient } from '@/lib/supabase/server'
 import { buildAccountsData, HISTORY_DAYS, type AccountsData, type RawAccount, type RawTxn } from '@/lib/accounts/build'
 import { isPlaidSchwabBrokerage, loadSchwab, schwabAccountName, type SchwabData } from '@/lib/schwab/server'
+import { loadBankBrands } from '@/lib/plaid/logos'
 
 const PAGE_SIZE = 1000
 const SCHWAB_ITEM = 'schwab-direct'
@@ -24,12 +25,13 @@ export async function loadAccounts(transactions?: RawTxn[]): Promise<LoadedAccou
   since.setUTCDate(since.getUTCDate() - HISTORY_DAYS)
   const sinceDay = since.toISOString().slice(0, 10)
 
-  const [accountsRes, holdingsRes, itemsRes, assetsRes, schwab] = await Promise.all([
+  const [accountsRes, holdingsRes, itemsRes, assetsRes, schwab, brands] = await Promise.all([
     supabase.from('accounts').select('id, name, type, subtype, current_balance, balance_updated_at, plaid_item_id'),
     supabase.from('holdings').select('account_id, institution_value'),
     supabase.from('plaid_items').select('plaid_item_id, institution_name'),
     supabase.from('assets').select('id, name, type, trim, current_value, value_updated_at'),
     loadSchwab(supabase),
+    loadBankBrands(supabase),
   ])
 
   let txns = transactions
@@ -83,11 +85,18 @@ export async function loadAccounts(transactions?: RawTxn[]): Promise<LoadedAccou
     }
   }
 
+  const logoByItem = new Map<string, string | null>()
+  for (const [itemId, b] of brands) logoByItem.set(itemId, b.logo)
+  // Schwab accounts connected directly borrow the logo of a Plaid Schwab login, if there is one
+  const schwabItem = [...institutionByItem.entries()].find(([id, name]) => id !== SCHWAB_ITEM && /schwab/i.test(name))
+  if (schwabItem) logoByItem.set(SCHWAB_ITEM, brands.get(schwabItem[0])?.logo || null)
+
   const data = buildAccountsData({
     accounts,
     transactions: txns.filter((t) => t.txn_date >= sinceDay),
     holdingsByAccount,
     institutionByItem,
+    logoByItem,
     assets: assetsRes.data || [],
   })
 

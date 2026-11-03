@@ -126,4 +126,8 @@ create policy "own schwab accounts" on public.schwab_accounts
 drop policy if exists "own schwab positions" on public.schwab_positions;
 create policy "own schwab positions" on public.schwab_positions
   for all using (user_id = auth.uid()) with check (user_id = auth.uid());
+
+-- Bank logos from Plaid (Accounts page)
+alter table public.plaid_items add column if not exists logo text;
+alter table public.plaid_items add column if not exists brand_color text;
 `

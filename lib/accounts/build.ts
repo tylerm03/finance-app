@@ -64,6 +64,7 @@ export type AccountRow = {
   subtitle: string
   institution: string
   avatar: 'bank' | 'manual' | 'vehicle' | 'home'
+  logo: string | null // bank logo (data: URL) when Plaid has one
   balance: number
   updatedLabel: string
   // Daily end-of-day balances, aligned with AccountsData.dates
@@ -131,6 +132,7 @@ export function buildAccountsData(input: {
   transactions: RawTxn[]
   holdingsByAccount: Map<string, number>
   institutionByItem: Map<string, string>
+  logoByItem?: Map<string, string | null>
   assets: RawAsset[]
   now?: Date
 }): AccountsData {
@@ -188,6 +190,7 @@ export function buildAccountsData(input: {
       subtitle: a.subtype ? titleCase(a.subtype) : titleCase(GROUP_META[key].label),
       institution,
       avatar: institution ? 'bank' : 'manual',
+      logo: (a.plaid_item_id && input.logoByItem?.get(a.plaid_item_id)) || null,
       balance,
       updatedLabel: timeAgo(a.balance_updated_at, now),
       series,
@@ -203,6 +206,7 @@ export function buildAccountsData(input: {
       subtitle: key === 'vehicles' ? 'Vehicle' : key === 'real_estate' ? 'Real Estate' : 'Asset',
       institution: '',
       avatar: key === 'vehicles' ? 'vehicle' : key === 'real_estate' ? 'home' : 'manual',
+      logo: null,
       balance: value,
       updatedLabel: timeAgo(asset.value_updated_at, now),
       series: new Array<number>(dates.length).fill(value),
