@@ -110,6 +110,8 @@ export function BudgetCard({ budget }: { budget: BudgetData }) {
 /* ---------------- Net worth ---------------- */
 
 const RANGES: [string, string, number][] = [
+  ['1d', '1 day', 1],
+  ['1w', '1 week', 7],
   ['1m', '1 month', 30],
   ['3m', '3 months', 90],
   ['6m', '6 months', 182],
@@ -149,7 +151,7 @@ export function NetWorthCard({ data }: { data: AccountsData }) {
         subtitle={
           <span className={'inline-flex items-center gap-1 ' + (diff >= 0 ? GREEN : RED)}>
             <Arrow size={15} strokeWidth={2.5} />
-            {formatMoney(Math.abs(diff))} ({pct.toFixed(Math.abs(pct) < 1 ? 1 : 0)}%)
+            {formatMoney(Math.abs(diff))} ({pct.toFixed(Math.abs(pct) < 0.1 && pct !== 0 ? 2 : Math.abs(pct) < 1 ? 1 : 0)}%)
           </span>
         }
         right={<Select value={range} onChange={setRange} options={RANGES.map(([k, l]) => [k, l])} />}

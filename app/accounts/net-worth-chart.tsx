@@ -22,6 +22,13 @@ function compactMoney(v: number) {
   return sign + '$' + Math.round(a)
 }
 
+// Over a short range the gridlines can be only a few dollars apart, so
+// "$145.3K" would repeat; show whole dollars then (e.g. $145,313).
+function axisFormatter(step: number) {
+  if (step >= 100) return compactMoney
+  return (v: number) => (v < 0 ? '-$' : '$') + Math.round(Math.abs(v)).toLocaleString('en-US')
+}
+
 type Point = { date: string; value: number }
 
 function ChartTooltip({ active, payload }: { active?: boolean; payload?: { payload: Point }[] }) {
@@ -67,7 +74,7 @@ export default function NetWorthChart({ data, maxLabels = 16 }: { data: Point[];
         <YAxis
           domain={domain}
           ticks={ticks}
-          tickFormatter={compactMoney}
+          tickFormatter={axisFormatter((domain[1] - domain[0]) / 4)}
           axisLine={false}
           tickLine={false}
           width={76}

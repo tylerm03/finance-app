@@ -11,6 +11,8 @@ import SchwabBanner from '../schwab-banner'
 import type { SchwabStatus } from '@/lib/schwab/server'
 
 const RANGES = [
+  { key: '1d', label: '1 day', days: 1 },
+  { key: '1w', label: '1 week', days: 7 },
   { key: '1m', label: '1 month', days: 30 },
   { key: '3m', label: '3 months', days: 90 },
   { key: '6m', label: '6 months', days: 182 },
@@ -65,7 +67,7 @@ function Change({
       <span className={'inline-flex items-center gap-1 font-medium ' + (flat ? 'text-[#77736d]' : good ? GOOD : BAD)}>
         {!flat && <Arrow size={size === 'lg' ? 17 : 16} strokeWidth={2.25} />}
         {formatMoney(Math.abs(diff))}
-        {pct !== null && <span>({pct.toFixed(1)}%)</span>}
+        {pct !== null && <span>({pct.toFixed(Math.abs(pct) < 0.1 && pct !== 0 ? 2 : 1)}%)</span>}
       </span>
       <span className="text-[#77736d]">{periodLabel} change</span>
     </span>
