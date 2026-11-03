@@ -132,7 +132,7 @@ function BreakdownSection({
             />
             <span className="relative flex min-w-0 items-center gap-2.5 text-[15px] text-[#1f1d1a]">
               <span className="text-[16px] leading-none">{s.emoji}</span>
-              <span className="truncate group-hover:underline">{s.label}</span>
+              <span className="truncate">{s.label}</span>
             </span>
             <span className="relative shrink-0 pl-4 text-[15px] tabular-nums text-[#1f1d1a]">
               {formatMoney(s.value)} <span className="text-[#8a8680]">({s.pct.toFixed(1)}%)</span>

@@ -252,7 +252,6 @@ export default function Sankey({
               title={(n.emoji ? n.emoji + ' ' : '') + n.label}
               value={n.value}
               pct={n.pct}
-              underline={clickable(n.key) && hover === n.key}
             />
           </g>
         ))}
